@@ -1,0 +1,647 @@
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../views/**/*.blade.php';
+
+/* Tailwind v4 Class-based Dark Mode */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+    --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, 'Cascadia Code', monospace;
+}
+
+[x-cloak] {
+    display: none !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   HOSPITAL CLEAN — Design System Tokens
+   ═══════════════════════════════════════════════════════════ */
+:root {
+    /* Brand Colors (overridden per-hospital via Blade) */
+    --color-primary: #124E78;
+    --color-secondary: #1E293B;
+    --color-accent: #C81D25;
+
+    /* Surface & Layout */
+    --hc-surface: #FFFFFF;
+    --hc-surface-alt: #F3F4F6;
+    --hc-border: #E5E7EB;
+    --hc-text: #111827;
+    --hc-text-muted: #6B7280;
+
+    /* Semantic */
+    --hc-success: #059669;
+    --hc-warning: #D97706;
+    --hc-danger: #DC2626;
+    --hc-purple: #7C3AED;
+    --hc-info: #0284C7;
+}
+
+.dark {
+    --hc-surface: #111827;
+    --hc-surface-alt: #1F2937;
+    --hc-border: #374151;
+    --hc-text: #F9FAFB;
+    --hc-text-muted: #9CA3AF;
+    --hc-success: #34D399;
+    --hc-warning: #FBBF24;
+    --hc-danger: #F87171;
+    --hc-purple: #A78BFA;
+    --hc-info: #38BDF8;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   BRAND UTILITY CLASSES (dynamic per hospital)
+   ═══════════════════════════════════════════════════════════ */
+.bg-brand-primary { background-color: var(--color-primary); }
+.text-brand-primary { color: var(--color-primary); }
+.border-brand-primary { border-color: var(--color-primary); }
+.bg-brand-accent { background-color: var(--color-accent); }
+.text-brand-accent { color: var(--color-accent); }
+.border-brand-accent { border-color: var(--color-accent); }
+
+/* ═══════════════════════════════════════════════════════════
+   BUTTON SYSTEM — Flat Solid + Hover Invert
+   ═══════════════════════════════════════════════════════════ */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    border-radius: 6px;
+    border: 1.5px solid transparent;
+    cursor: pointer;
+    transition: all 150ms ease;
+    line-height: 1.4;
+    white-space: nowrap;
+}
+
+.btn-sm {
+    padding: 5px 12px;
+    font-size: 0.75rem;
+    gap: 4px;
+}
+
+.btn-xs {
+    padding: 3px 8px;
+    font-size: 0.6875rem;
+    gap: 3px;
+}
+
+/* Primary: brand bg → invert on hover */
+.btn-primary {
+    background-color: var(--color-primary);
+    color: #FFFFFF;
+    border-color: var(--color-primary);
+}
+.btn-primary:hover {
+    background-color: transparent;
+    color: var(--color-primary);
+}
+
+/* Secondary: alt surface → brand on hover */
+.btn-secondary {
+    background-color: var(--hc-surface-alt);
+    color: var(--hc-text);
+    border-color: var(--hc-border);
+}
+.btn-secondary:hover {
+    background-color: var(--color-primary);
+    color: #FFFFFF;
+    border-color: var(--color-primary);
+}
+
+/* Danger: red → invert on hover */
+.btn-danger {
+    background-color: var(--hc-danger);
+    color: #FFFFFF;
+    border-color: var(--hc-danger);
+}
+.btn-danger:hover {
+    background-color: transparent;
+    color: var(--hc-danger);
+}
+
+/* Ghost: transparent → subtle fill on hover */
+.btn-ghost {
+    background-color: transparent;
+    color: var(--hc-text-muted);
+    border-color: transparent;
+}
+.btn-ghost:hover {
+    background-color: var(--hc-surface-alt);
+    color: var(--hc-text);
+}
+
+/* Success: green → invert */
+.btn-success {
+    background-color: var(--hc-success);
+    color: #FFFFFF;
+    border-color: var(--hc-success);
+}
+.btn-success:hover {
+    background-color: transparent;
+    color: var(--hc-success);
+}
+
+/* Purple (Lab accent) */
+.btn-purple {
+    background-color: var(--hc-purple);
+    color: #FFFFFF;
+    border-color: var(--hc-purple);
+}
+.btn-purple:hover {
+    background-color: transparent;
+    color: var(--hc-purple);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   FORM INPUTS — Clean, Flat
+   ═══════════════════════════════════════════════════════════ */
+.hc-input {
+    width: 100%;
+    padding: 8px 12px;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    background: var(--hc-surface-alt);
+    border: 1px solid var(--hc-border);
+    border-radius: 6px;
+    color: var(--hc-text);
+    outline: none;
+    transition: border-color 150ms ease;
+}
+
+.hc-input:focus {
+    border-color: var(--color-primary);
+    border-width: 2px;
+    padding: 7px 11px; /* compensate for 2px border */
+}
+
+.hc-input::placeholder {
+    color: var(--hc-text-muted);
+    font-weight: 400;
+}
+
+.hc-input-sm {
+    padding: 5px 10px;
+    font-size: 0.75rem;
+}
+
+.hc-input-sm:focus {
+    padding: 4px 9px;
+}
+
+.hc-select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    padding-right: 32px;
+}
+
+.hc-label {
+    display: block;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    color: var(--hc-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 4px;
+}
+
+.hc-textarea {
+    width: 100%;
+    padding: 8px 12px;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    background: var(--hc-surface-alt);
+    border: 1px solid var(--hc-border);
+    border-radius: 6px;
+    color: var(--hc-text);
+    outline: none;
+    resize: vertical;
+    min-height: 80px;
+    transition: border-color 150ms ease;
+}
+
+.hc-textarea:focus {
+    border-color: var(--color-primary);
+    border-width: 2px;
+    padding: 7px 11px;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   CARDS & CONTAINERS — Border-defined, No Shadows
+   ═══════════════════════════════════════════════════════════ */
+.hc-card {
+    background: var(--hc-surface);
+    border: 1px solid var(--hc-border);
+    border-radius: 8px;
+    padding: 16px;
+}
+
+.hc-card-flush {
+    background: var(--hc-surface);
+    border: 1px solid var(--hc-border);
+    border-radius: 8px;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   A4 CLINICAL PAPER DOCUMENT SYSTEM
+   ═══════════════════════════════════════════════════════════ */
+.paper-container {
+    width: 100%;
+    overflow-x: auto;
+    padding-bottom: 1.5rem;
+}
+
+.paper-sheet {
+    background: var(--hc-surface);
+    border: 1px solid var(--hc-border);
+    border-radius: 6px;
+    width: 100%;
+    max-width: 920px;
+    min-width: 820px;
+    margin: 0 auto;
+    padding: 28px 32px;
+    position: relative;
+    box-sizing: border-box;
+}
+
+.paper-header {
+    border-bottom: 2px solid var(--hc-text);
+    padding-bottom: 14px;
+    margin-bottom: 18px;
+}
+
+.paper-metadata-bar {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+    padding-top: 10px;
+    margin-top: 12px;
+    border-top: 1px solid var(--hc-border);
+    font-size: 0.75rem;
+}
+
+.paper-section {
+    border: 1px solid var(--hc-border);
+    border-radius: 4px;
+    margin-bottom: 18px;
+    background: var(--hc-surface);
+    overflow: hidden;
+}
+
+.paper-section-header {
+    background: var(--hc-surface-alt);
+    border-bottom: 1px solid var(--hc-border);
+    padding: 8px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.paper-input {
+    background: var(--hc-surface-alt);
+    border: 1px solid var(--hc-border);
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 0.8125rem;
+    color: var(--hc-text);
+    outline: none;
+    transition: border-color 150ms ease;
+}
+
+.paper-input:focus {
+    border-color: var(--color-primary);
+    background: var(--hc-surface);
+}
+
+.paper-input-underlined {
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid var(--hc-border);
+    padding: 2px 4px;
+    font-size: 0.8125rem;
+    color: var(--hc-text);
+    outline: none;
+    transition: border-color 150ms ease;
+}
+
+.paper-input-underlined:focus {
+    border-bottom-color: var(--color-primary);
+    border-bottom-width: 2px;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   TABLES — Clean & Structured
+   ═══════════════════════════════════════════════════════════ */
+.hc-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8125rem;
+}
+
+.hc-table th {
+    padding: 8px 12px;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--hc-text-muted);
+    background: var(--hc-surface-alt);
+    border-bottom: 1px solid var(--hc-border);
+    text-align: left;
+}
+
+.hc-table td {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--hc-border);
+    vertical-align: middle;
+}
+
+.hc-table tbody tr:hover {
+    background: var(--hc-surface-alt);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   BADGES — Flat Solid Chips
+   ═══════════════════════════════════════════════════════════ */
+.hc-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    border-radius: 4px;
+    white-space: nowrap;
+}
+
+.hc-badge-brand {
+    background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+    color: var(--color-primary);
+}
+
+.hc-badge-success {
+    background: color-mix(in srgb, var(--hc-success) 12%, transparent);
+    color: var(--hc-success);
+}
+
+.hc-badge-warning {
+    background: color-mix(in srgb, var(--hc-warning) 12%, transparent);
+    color: var(--hc-warning);
+}
+
+.hc-badge-danger {
+    background: color-mix(in srgb, var(--hc-danger) 12%, transparent);
+    color: var(--hc-danger);
+}
+
+.hc-badge-purple {
+    background: color-mix(in srgb, var(--hc-purple) 12%, transparent);
+    color: var(--hc-purple);
+}
+
+.hc-badge-muted {
+    background: var(--hc-surface-alt);
+    color: var(--hc-text-muted);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   TOP NAV — Flat horizontal bar
+   ═══════════════════════════════════════════════════════════ */
+.topnav {
+    height: 56px;
+    background: var(--hc-surface);
+    border-bottom: 1px solid var(--hc-border);
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    gap: 8px;
+    position: sticky;
+    top: 0;
+    z-index: 40;
+}
+
+.topnav-link {
+    padding: 6px 12px;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--hc-text-muted);
+    border-radius: 6px;
+    transition: all 150ms ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+}
+
+.topnav-link:hover {
+    background: var(--hc-surface-alt);
+    color: var(--hc-text);
+}
+
+.topnav-link.active {
+    color: var(--color-primary);
+    background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SECONDARY TAB BAR — For department sub-pages
+   ═══════════════════════════════════════════════════════════ */
+.tab-bar {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    background: var(--hc-surface);
+    border-bottom: 1px solid var(--hc-border);
+    padding: 0 24px;
+    overflow-x: auto;
+}
+
+.tab-item {
+    padding: 12px 16px;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--hc-text-muted);
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    transition: all 150ms ease;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    text-decoration: none;
+}
+
+.tab-item:hover {
+    color: var(--hc-text);
+}
+
+.tab-item.active {
+    color: var(--color-primary);
+    border-bottom-color: var(--color-primary);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   DROPDOWN MENUS
+   ═══════════════════════════════════════════════════════════ */
+.dropdown-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    margin-top: 4px;
+    background: var(--hc-surface);
+    border: 1px solid var(--hc-border);
+    border-radius: 8px;
+    padding: 4px;
+    min-width: 220px;
+    z-index: 50;
+}
+
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--hc-text);
+    border-radius: 6px;
+    transition: all 150ms ease;
+    text-decoration: none;
+    cursor: pointer;
+    width: 100%;
+    text-align: left;
+    border: none;
+    background: transparent;
+}
+
+.dropdown-item:hover {
+    background: var(--color-primary);
+    color: #FFFFFF;
+}
+
+.dropdown-divider {
+    height: 1px;
+    background: var(--hc-border);
+    margin: 4px 0;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   STATUS INDICATORS
+   ═══════════════════════════════════════════════════════════ */
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+    flex-shrink: 0;
+}
+
+.status-dot-success { background: var(--hc-success); }
+.status-dot-warning { background: var(--hc-warning); }
+.status-dot-danger { background: var(--hc-danger); }
+.status-dot-brand { background: var(--color-primary); }
+.status-dot-muted { background: var(--hc-text-muted); }
+.status-dot-pulse { animation: pulse-dot 2s ease-in-out infinite; }
+
+@keyframes pulse-dot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   TOAST NOTIFICATIONS — Clean flat strips
+   ═══════════════════════════════════════════════════════════ */
+.hc-toast {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 10px 16px;
+    border-radius: 6px;
+    border: 1px solid;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    margin-bottom: 16px;
+}
+
+.hc-toast-success {
+    background: color-mix(in srgb, var(--hc-success) 8%, var(--hc-surface));
+    border-color: color-mix(in srgb, var(--hc-success) 25%, var(--hc-border));
+    color: var(--hc-success);
+}
+
+.hc-toast-warning {
+    background: color-mix(in srgb, var(--hc-warning) 8%, var(--hc-surface));
+    border-color: color-mix(in srgb, var(--hc-warning) 25%, var(--hc-border));
+    color: var(--hc-warning);
+}
+
+.hc-toast-danger {
+    background: color-mix(in srgb, var(--hc-danger) 8%, var(--hc-surface));
+    border-color: color-mix(in srgb, var(--hc-danger) 25%, var(--hc-border));
+    color: var(--hc-danger);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   UTILITY: No-print, page break
+   ═══════════════════════════════════════════════════════════ */
+@media print {
+    body {
+        background: white !important;
+        color: black !important;
+        font-size: 11pt !important;
+    }
+
+    .no-print, .topnav, .tab-bar {
+        display: none !important;
+    }
+
+    main {
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+    }
+
+    .hc-card {
+        border: none !important;
+        padding: 0 !important;
+    }
+
+    .page-break {
+        page-break-after: always;
+    }
+}
+
+/* Prevent jumpy transforms on interactive elements */
+button, input, select, textarea, tr {
+    transform: none !important;
+}
+
+/* Smooth scrollbar */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--hc-border);
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--hc-text-muted);
+}
