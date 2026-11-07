@@ -1,0 +1,26 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Prevent direct HTTP access to sensitive environment, source, and storage files
+    RewriteRule ^\.env.*$ - [F,L,NC]
+    RewriteRule ^composer\.(json|lock)$ - [F,L,NC]
+    RewriteRule ^package(-lock)?\.json$ - [F,L,NC]
+    RewriteRule ^phpunit\.xml$ - [F,L,NC]
+    RewriteRule ^vite\.config\.js$ - [F,L,NC]
+    RewriteRule ^AGENTS\.md$ - [F,L,NC]
+    RewriteRule ^CLAUDE\.md$ - [F,L,NC]
+    RewriteRule ^storage/app/.*$ - [F,L,NC]
+    RewriteRule ^storage/framework/.*$ - [F,L,NC]
+    RewriteRule ^storage/logs/.*$ - [F,L,NC]
+    RewriteRule ^app/.*$ - [F,L,NC]
+    RewriteRule ^bootstrap/.*$ - [F,L,NC]
+    RewriteRule ^config/.*$ - [F,L,NC]
+    RewriteRule ^database/.*$ - [F,L,NC]
+    RewriteRule ^resources/.*$ - [F,L,NC]
+    RewriteRule ^routes/.*$ - [F,L,NC]
+    RewriteRule ^tests/.*$ - [F,L,NC]
+
+    # Seamlessly route all traffic to the public/ directory
+    RewriteCond %{REQUEST_URI} !^/public/
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>
