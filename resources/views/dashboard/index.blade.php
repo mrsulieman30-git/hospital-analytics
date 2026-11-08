@@ -1510,8 +1510,8 @@
 
                     <!-- Percentage Change Pill with Google Finance styling -->
                     <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-xs font-bold"
-                          :class="ticker.change_direction === 'up' ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-rose-500/10 text-rose-600 dark:text-rose-400'">
-                        <span x-text="ticker.change_direction === 'up' ? '↑' : '↓'"></span>
+                          :class="ticker.change_direction === 'up' ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : (ticker.change_direction === 'down' ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400' : 'bg-slate-500/10 text-slate-500 dark:text-slate-400')">
+                        <span x-text="ticker.change_direction === 'up' ? '↑' : (ticker.change_direction === 'down' ? '↓' : '—')"></span>
                         <span x-text="ticker.change_percent || '0.0%'"></span>
                         <span class="font-normal opacity-80" x-text="ticker.change_absolute ? ticker.change_absolute + ' period' : ''"></span>
                     </span>
@@ -2195,7 +2195,7 @@ document.addEventListener('DOMContentLoaded', () => {
             datasets = [
                 {
                     label: 'Prescriptions Served',
-                    data: weeklyTrendData.served_rx || [110, 115, 122, 118, 125, 130, 128],
+                    data: weeklyTrendData.served_rx || [],
                     borderColor: '#10B981',
                     backgroundColor: 'rgba(16, 185, 129, 0.1)',
                     fill: true,
@@ -2274,7 +2274,7 @@ document.addEventListener('DOMContentLoaded', () => {
             datasets = [
                 {
                     label: 'Total Tests Conducted',
-                    data: weeklyTrendData.lab_tests || [180, 195, 210, 205, 220, 215, 225],
+                    data: weeklyTrendData.lab_tests || [],
                     borderColor: '#A855F7',
                     backgroundColor: 'rgba(168, 85, 247, 0.1)',
                     fill: true,
@@ -2302,7 +2302,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 },
                 {
                     label: 'Doctor Consultations',
-                    data: weeklyTrendData.consultations || [70, 75, 82, 78, 85, 80, 88],
+                    data: weeklyTrendData.consultations || [],
                     borderColor: '#10B981',
                     backgroundColor: 'transparent',
                     tension: 0.35,
@@ -2415,14 +2415,18 @@ document.addEventListener('DOMContentLoaded', () => {
                     },
                     y: {
                         position: 'left',
+                        min: 0,
+                        suggestedMax: 20,
                         grid: { color: gridColor },
-                        ticks: { color: textColor, font: { size: 10 } },
+                        ticks: { color: textColor, font: { size: 10 }, precision: 0 },
                         title: { display: true, text: 'Footfall / ER Cases', color: textColor, font: { size: 10, weight: 'bold' } }
                     },
                     y1: {
                         position: 'right',
+                        min: 0,
+                        suggestedMax: 10,
                         grid: { drawOnChartArea: false },
-                        ticks: { color: textColor, font: { size: 10 } },
+                        ticks: { color: textColor, font: { size: 10 }, precision: 0 },
                         title: { display: true, text: 'IPD Admissions', color: textColor, font: { size: 10, weight: 'bold' } }
                     }
                 }
@@ -2685,10 +2689,13 @@ document.addEventListener('DOMContentLoaded', () => {
                             },
                             y: {
                                 position: 'left',
+                                min: 0,
+                                suggestedMax: 10,
                                 grid: { color: gridColor },
                                 ticks: {
                                     color: textColor,
                                     font: { size: 10 },
+                                    precision: 0,
                                     callback: (v) => Number(v).toLocaleString()
                                 }
                             }

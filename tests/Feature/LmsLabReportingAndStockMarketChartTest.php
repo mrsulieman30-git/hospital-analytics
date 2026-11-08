@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\DailyReport;
 use App\Models\User;
+use App\Services\AnalyticsKpiService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Tests\TestCase;
@@ -296,5 +297,71 @@ class LmsLabReportingAndStockMarketChartTest extends TestCase
         $zip->close();
 
         return new UploadedFile($tempPath, $filename, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', null, true);
+    }
+
+    public function test_charts_are_zeroed_when_no_data_and_listen_to_actual_reports(): void
+    {
+        // 1. Ensure zero historical reports
+        DailyReport::truncate();
+
+        $emptyResponse = $this->actingAs($this->admin)
+            ->getJson(route('analytics.lab-tests.chart', [
+                'period' => '5d',
+                'metric' => 'total',
+            ]));
+
+        $emptyResponse->assertOk();
+        $this->assertEquals(0, $emptyResponse->json('ticker.total_volume'));
+        $this->assertEquals(0, $emptyResponse->json('ticker.latest_value'));
+        $this->assertEquals(0, $emptyResponse->json('ticker.baseline_value'));
+        $this->assertEquals('flat', $emptyResponse->json('ticker.change_direction'));
+
+        $datasets = $emptyResponse->json('timeline.datasets');
+        $this->assertNotEmpty($datasets);
+        foreach ($datasets[0]['data'] as $point) {
+            $this->assertEquals(0, $point, 'All chart points must be zeroed when no data exists');
+        }
+
+        // Also verify WeeklyTrend in AnalyticsKpiService is zeroed
+        $kpiService = app(AnalyticsKpiService::class);
+        $trend = $kpiService->getWeeklyTrend();
+        $this->assertEquals(array_fill(0, count($trend['labels']), 0), $trend['footfall']);
+        $this->assertEquals(array_fill(0, count($trend['labels']), 0), $trend['lab_tests']);
+        $this->assertEquals(array_fill(0, count($trend['labels']), 0), $trend['er_cases']);
+
+        // 2. Insert a genuine report for today with 42 CBC tests
+        DailyReport::create([
+            'department' => 'laboratory',
+            'form_code' => 'ANL-LAB-04',
+            'report_date' => now()->toDateString(),
+            'created_by' => $this->admin->id,
+            'status' => 'submitted',
+            'form_data' => [
+                'section_a_volume' => [
+                    'total_tests' => 42,
+                    'total_patients' => 18,
+                ],
+                'section_c_benches_and_quality' => [
+                    'tests' => [
+                        [
+                            'test_name' => 'CBC',
+                            'lab_type' => 'haematology',
+                            'count' => 42,
+                        ],
+                    ],
+                ],
+            ],
+        ]);
+
+        $realResponse = $this->actingAs($this->admin)
+            ->getJson(route('analytics.lab-tests.chart', [
+                'period' => '5d',
+                'metric' => 'total',
+            ]));
+
+        $realResponse->assertOk();
+        $this->assertEquals(42, $realResponse->json('ticker.total_volume'));
+        $realData = $realResponse->json('timeline.datasets.0.data');
+        $this->assertContains(42, $realData);
     }
 }

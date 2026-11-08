@@ -585,7 +585,7 @@ class LmsLabReportParserService
 
         // Query existing DailyReport records for laboratory within range
         $reports = DailyReport::where('department', 'laboratory')
-            ->whereBetween('report_date', [$startDate->toDateString(), $endDate->toDateString()])
+            ->whereBetween('report_date', [$startDate->copy()->startOfDay()->toDateTimeString(), $endDate->copy()->endOfDay()->toDateTimeString()])
             ->orderBy('report_date')
             ->get()
             ->keyBy(fn ($r) => Carbon::parse($r->report_date)->toDateString());
@@ -691,102 +691,132 @@ class LmsLabReportParserService
             $colorIdx++;
         }
 
-        // Build data points
+        // Build authentic data points purely from database DailyReport records
         $n = count($labels);
-        $baseTotalVolume = match (strtolower($period)) {
-            'day', '1d' => 220,
-            '5d' => 235,
-            'week' => 240,
-            'month', '1m' => 250,
-            '6m' => 1400,
-            'ytd' => 4500,
-            'year', '1y' => 7400,
-            '5_years', '5y' => 88000,
-            'max' => 185000,
-            default => 230,
-        };
 
-        for ($i = 0; $i < $n; $i++) {
-            // Check if there is an authentic DailyReport for this period slot
-            $dayReport = null;
-            if ($interval === 'daily') {
-                $dtStr = $startDate->copy()->addDays($i)->toDateString();
+        if ($interval === 'hourly') {
+            $todayDate = $startDate->toDateString();
+            $todayReport = $reports->get($todayDate) ?? DailyReport::where('department', 'laboratory')
+                ->where('report_date', $todayDate)
+                ->latest()
+                ->first();
+
+            $todayTotal = 0;
+            $todayTestCounts = array_fill_keys(array_map('strtoupper', $selectedTests), 0);
+
+            if ($todayReport) {
+                $todayTotal = (int) ($todayReport->form_data['section_a_volume']['total_tests'] ?? 0);
+                $testsList = $todayReport->form_data['section_c_benches_and_quality']['tests'] ?? [];
+                foreach ($testsList as $t) {
+                    $tn = strtoupper($t['test_name'] ?? '');
+                    if (isset($todayTestCounts[$tn])) {
+                        $todayTestCounts[$tn] += (int) ($t['count'] ?? 0);
+                    }
+                }
+            }
+
+            // Distribute actual volume across hours up to current time, zero when no reports
+            $currentHour = (int) $now->format('H');
+            for ($i = 0; $i < $n; $i++) {
+                $slotHour = (int) explode(':', $labels[$i])[0];
+                if ($todayTotal > 0 && $slotHour <= $currentHour) {
+                    // Cumulative progression of actual logged tests
+                    $progress = min(1.0, max(0.2, ($slotHour - 6) / max(1, $currentHour - 6)));
+                    $slotTotal = (int) round($todayTotal * $progress);
+                    $totalSeries[] = $slotTotal;
+
+                    foreach ($selectedTests as $testName) {
+                        $actualCount = $todayTestCounts[strtoupper($testName)] ?? 0;
+                        $testSeries[$testName]['data'][] = (int) round($actualCount * $progress);
+                    }
+                } else {
+                    $totalSeries[] = 0;
+                    foreach ($selectedTests as $testName) {
+                        $testSeries[$testName]['data'][] = 0;
+                    }
+                }
+            }
+        } elseif ($interval === 'daily') {
+            $periodDays = iterator_to_array(CarbonPeriod::create($startDate, $endDate));
+
+            for ($i = 0; $i < $n; $i++) {
+                $dtStr = $periodDays[$i]->toDateString();
                 $dayReport = $reports->get($dtStr);
+
+                if ($dayReport) {
+                    $dayTotal = (int) ($dayReport->form_data['section_a_volume']['total_tests'] ?? 0);
+                    $testsList = $dayReport->form_data['section_c_benches_and_quality']['tests'] ?? [];
+
+                    if ($dayTotal === 0 && ! empty($testsList)) {
+                        $dayTotal = array_sum(array_map(fn ($t) => (int) ($t['count'] ?? 0), $testsList));
+                    }
+
+                    $totalSeries[] = $dayTotal;
+
+                    // Exact counts for selected tests
+                    foreach ($selectedTests as $testName) {
+                        $val = 0;
+                        foreach ($testsList as $t) {
+                            if (strcasecmp($t['test_name'] ?? '', $testName) === 0) {
+                                $val = (int) ($t['count'] ?? 0);
+                                break;
+                            }
+                        }
+                        $testSeries[$testName]['data'][] = $val;
+                    }
+                } else {
+                    $totalSeries[] = 0;
+                    foreach ($selectedTests as $testName) {
+                        $testSeries[$testName]['data'][] = 0;
+                    }
+                }
             }
+        } elseif ($interval === 'monthly') {
+            $periodMonths = iterator_to_array(CarbonPeriod::create($startDate, '1 month', $endDate));
 
-            if ($dayReport && isset($dayReport->form_data['section_a_volume']['total_tests'])) {
-                $dayTotal = (int) $dayReport->form_data['section_a_volume']['total_tests'];
-            } else {
-                // Synthetic curve with natural cyclic variance (+-15%)
-                $variance = sin($i * 0.7) * 0.12 + cos($i * 0.3) * 0.08;
-                $dayTotal = (int) round($baseTotalVolume * (1 + $variance));
-            }
+            for ($i = 0; $i < $n; $i++) {
+                $monthStr = $periodMonths[$i]->format('Y-m');
+                $monthReports = $reports->filter(fn ($r) => str_starts_with($r->report_date, $monthStr));
 
-            $totalSeries[] = $dayTotal;
+                $monthTotal = 0;
+                $testCounts = array_fill_keys(array_map('strtoupper', $selectedTests), 0);
 
-            // Fill individual tests with authentic distinct clinical demand dynamics
-            foreach ($selectedTests as $testName) {
-                // Check if test was explicitly logged in day report
-                $specificVal = null;
-                if ($dayReport && isset($dayReport->form_data['section_c_benches_and_quality']['tests'])) {
-                    foreach ($dayReport->form_data['section_c_benches_and_quality']['tests'] as $t) {
-                        if (strcasecmp($t['test_name'] ?? '', $testName) === 0) {
-                            $specificVal = (int) ($t['count'] ?? 0);
-                            break;
+                foreach ($monthReports as $r) {
+                    $monthTotal += (int) ($r->form_data['section_a_volume']['total_tests'] ?? 0);
+                    foreach ($r->form_data['section_c_benches_and_quality']['tests'] ?? [] as $t) {
+                        $tn = strtoupper($t['test_name'] ?? '');
+                        if (isset($testCounts[$tn])) {
+                            $testCounts[$tn] += (int) ($t['count'] ?? 0);
                         }
                     }
                 }
 
-                if ($specificVal !== null) {
-                    $testSeries[$testName]['data'][] = $specificVal;
-                } else {
-                    // Check if bench volume is available in the day report
-                    $typeKey = self::MASTER_TEST_CATALOG[$testName] ?? 'haematology';
-                    $benchVolume = null;
-                    if ($dayReport && isset($dayReport->form_data['section_c_benches_and_quality'])) {
-                        $benches = $dayReport->form_data['section_c_benches_and_quality'];
-                        $benchKeyMap = [
-                            'haematology' => 'hematology',
-                            'serology' => 'serology_immunology',
-                            'hormones' => 'hormones_special',
-                            'microbiology_parasitology' => 'microbiology_parasitology',
-                        ];
-                        $lookup = $benchKeyMap[$typeKey] ?? $typeKey;
-                        if (isset($benches[$lookup]) && (int) $benches[$lookup] > 0) {
-                            $benchVolume = (int) $benches[$lookup];
+                $totalSeries[] = $monthTotal;
+                foreach ($selectedTests as $testName) {
+                    $testSeries[$testName]['data'][] = $testCounts[strtoupper($testName)] ?? 0;
+                }
+            }
+        } else { // yearly
+            for ($i = 0; $i < $n; $i++) {
+                $targetYear = (int) $labels[$i];
+                $yearReports = $reports->filter(fn ($r) => Carbon::parse($r->report_date)->year === $targetYear);
+
+                $yearTotal = 0;
+                $testCounts = array_fill_keys(array_map('strtoupper', $selectedTests), 0);
+
+                foreach ($yearReports as $r) {
+                    $yearTotal += (int) ($r->form_data['section_a_volume']['total_tests'] ?? 0);
+                    foreach ($r->form_data['section_c_benches_and_quality']['tests'] ?? [] as $t) {
+                        $tn = strtoupper($t['test_name'] ?? '');
+                        if (isset($testCounts[$tn])) {
+                            $testCounts[$tn] += (int) ($t['count'] ?? 0);
                         }
                     }
+                }
 
-                    // Benchmark weight from hospital distribution
-                    $baseWeight = $testDistribution[strtoupper($testName)] ?? 0.008;
-
-                    // Derive distinct pseudo-random deterministic frequency & phase per test name
-                    // Ensures Test A and Test B have completely different curves, peaks, and troughs
-                    $testSeed = abs(crc32($testName));
-                    $freq = 0.35 + (($testSeed % 9) * 0.07);
-                    $phase = ($testSeed % 17) * 0.37;
-                    $secondaryWave = cos($i * 0.85 + ($testSeed % 7)) * 0.14;
-                    $primaryWave = sin($i * $freq + $phase) * 0.28;
-                    $distinctFactor = 1.0 + $primaryWave + $secondaryWave;
-
-                    if ($benchVolume !== null) {
-                        // Test is proportionally derived from its authentic bench, not the entire hospital total
-                        $benchShare = match ($typeKey) {
-                            'haematology' => ($testName === 'CBC' ? 0.42 : ($testName === 'ESR' ? 0.22 : 0.12)),
-                            'biochemistry' => ($testName === 'GLUCOSE (RBS)' ? 0.28 : ($testName === 'CREATININE' ? 0.22 : 0.14)),
-                            'serology' => ($testName === 'TYPHOID IGM/IGG' ? 0.38 : 0.18),
-                            'hormones' => ($testName === 'TSH' ? 0.45 : 0.25),
-                            'urine' => 0.85,
-                            'stool' => 0.75,
-                            default => 0.25,
-                        };
-                        $testVal = max(1, (int) round($benchVolume * $benchShare * $distinctFactor));
-                    } else {
-                        // Derived with distinct curve trajectory based on dayTotal and unique frequency
-                        $testVal = max(1, (int) round($dayTotal * $baseWeight * $distinctFactor));
-                    }
-
-                    $testSeries[$testName]['data'][] = $testVal;
+                $totalSeries[] = $yearTotal;
+                foreach ($selectedTests as $testName) {
+                    $testSeries[$testName]['data'][] = $testCounts[strtoupper($testName)] ?? 0;
                 }
             }
         }
@@ -807,16 +837,18 @@ class LmsLabReportParserService
         }
 
         // Compute high, low, mean, volume metrics for ticker based on active selection
-        $activeSeries = ($metric === 'total') ? $selectedAggregateSeries : $selectedAggregateSeries;
+        $activeSeries = $selectedAggregateSeries;
         $highTotal = ! empty($activeSeries) ? max($activeSeries) : 0;
         $lowTotal = ! empty($activeSeries) ? min($activeSeries) : 0;
         $sumTotal = ! empty($activeSeries) ? array_sum($activeSeries) : 0;
-        $avgTotal = ! empty($activeSeries) ? round($sumTotal / count($activeSeries)) : 0;
+        $avgTotal = (! empty($activeSeries) && count($activeSeries) > 0) ? round($sumTotal / count($activeSeries)) : 0;
 
         // Change percentage vs baseline
-        $firstVal = $activeSeries[0] ?? 1;
-        $lastVal = end($activeSeries) ?: 1;
-        $changePct = round((($lastVal - $firstVal) / max(1, $firstVal)) * 100, 1);
+        $firstVal = $activeSeries[0] ?? 0;
+        $lastVal = end($activeSeries) ?: 0;
+        $changeAbs = $lastVal - $firstVal;
+        $changePct = ($firstVal > 0) ? round(($changeAbs / $firstVal) * 100, 1) : 0.0;
+        $changeDirection = $changeAbs > 0 ? 'up' : ($changeAbs < 0 ? 'down' : 'flat');
 
         $testSummaryList = [];
         foreach ($selectedTests as $tName) {
@@ -833,7 +865,7 @@ class LmsLabReportParserService
                 'total_period_volume' => $tSum,
                 'peak_interval_volume' => $tPeak,
                 'market_share' => $share,
-                'trend_direction' => $tLast >= $tFirst ? 'up' : 'flat',
+                'trend_direction' => $tLast > $tFirst ? 'up' : ($tLast < $tFirst ? 'down' : 'flat'),
             ];
         }
 
@@ -883,7 +915,7 @@ class LmsLabReportParserService
             'period_low' => $lowTotal,
             'change_absolute' => ($changeAbs >= 0 ? '+' : '').number_format($changeAbs, 0),
             'change_percent' => ($changePct >= 0 ? '+' : '').$changePct.'%',
-            'change_direction' => $changePct >= 0 ? 'up' : 'down',
+            'change_direction' => $changeDirection,
             'period_display' => match (strtolower($period)) {
                 'day', '1d' => '1D',
                 '5d' => '5D',

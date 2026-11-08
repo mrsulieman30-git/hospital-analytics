@@ -476,10 +476,7 @@ class AnalyticsKpiService
 
             // Footfall & Consultations (Reception)
             $rec = $reports->get('reception');
-            $recFootfall = (int) ($rec->form_data['section_a']['total_footfall'] ?? 0);
-            if ($recFootfall === 0) {
-                $recFootfall = 145 + (($idx * 3) % 17) - 8;
-            }
+            $recFootfall = $rec ? (int) ($rec->form_data['section_a']['total_footfall'] ?? 0) : 0;
             $receptionFootfallData[] = $recFootfall;
 
             $docConsults = 0;
@@ -488,47 +485,31 @@ class AnalyticsKpiService
                     $docConsults += (int) ($dEntry['completed'] ?? 0);
                 }
             }
-            if ($docConsults === 0) {
-                $docConsults = 70 + (($idx * 3) % 13) - 5;
-            }
             $consultationsData[] = $docConsults;
 
             // ER Cases
             $er = $reports->get('emergency');
-            $erCases = (int) ($er->form_data['section_a']['total_er_cases'] ?? 0);
-            if ($erCases === 0) {
-                $erCases = 38 + (($idx * 2) % 9) - 4;
-            }
+            $erCases = $er ? (int) ($er->form_data['section_a']['total_er_cases'] ?? 0) : 0;
             $erData[] = $erCases;
 
             // IPD Admissions
             $ipd = $reports->get('inpatient');
-            $ipdAdmissions = (int) ($ipd->form_data['section_b_flow']['direct_admissions'] ?? 0)
-                + (int) ($ipd->form_data['section_b_flow']['er_admissions'] ?? 0);
-            if ($ipdAdmissions === 0) {
-                $ipdAdmissions = 10 + (($idx * 2) % 5) - 2;
-            }
+            $ipdAdmissions = $ipd ? (
+                (int) ($ipd->form_data['section_b_flow']['direct_admissions'] ?? 0)
+                + (int) ($ipd->form_data['section_b_flow']['er_admissions'] ?? 0)
+            ) : 0;
             $ipdAdmissionsData[] = $ipdAdmissions;
 
             // BOR
-            $census = (int) ($ipd->form_data['section_b_flow']['closing_census'] ?? 0);
-            if ($census === 0) {
-                $bor = round(80.5 + fmod($idx * 1.5, 6) - 2.5, 1);
-            } else {
-                $bor = $activeBeds > 0 ? round(($census / $activeBeds) * 100, 1) : 0;
-            }
+            $census = $ipd ? (int) ($ipd->form_data['section_b_flow']['closing_census'] ?? ($ipd->form_data['section_a_census']['current_admissions_f'] ?? 0)) : 0;
+            $bor = ($census > 0 && $activeBeds > 0) ? round(($census / $activeBeds) * 100, 1) : 0;
             $borData[] = $bor;
 
             // Rx Fill Rate & Served Rx (Pharmacy)
             $phm = $reports->get('pharmacy');
-            $served = (int) ($phm->form_data['section_a']['total_served_rx'] ?? 0);
-            $unserved = (int) ($phm->form_data['section_a']['total_unserved_patients'] ?? 0);
-            if ($served + $unserved === 0) {
-                $rxFill = round(87.2 + fmod($idx * 1.2, 5) - 2.0, 1);
-                $served = 115 + (($idx * 4) % 19) - 8;
-            } else {
-                $rxFill = round(($served / ($served + $unserved)) * 100, 1);
-            }
+            $served = $phm ? (int) ($phm->form_data['section_a']['total_served_rx'] ?? 0) : 0;
+            $unserved = $phm ? (int) ($phm->form_data['section_a']['total_unserved_patients'] ?? 0) : 0;
+            $rxFill = ($served + $unserved > 0) ? round(($served / ($served + $unserved)) * 100, 1) : 0;
             $rxFillData[] = $rxFill;
             $servedRxData[] = $served;
             $pharmacyFootfallData[] = $served;
@@ -538,10 +519,7 @@ class AnalyticsKpiService
 
             // Lab Tests (Laboratory)
             $lab = $reports->get('laboratory');
-            $labTests = (int) ($lab->form_data['section_a_volume']['total_tests'] ?? 0);
-            if ($labTests === 0) {
-                $labTests = 180 + (($idx * 6) % 25) - 10;
-            }
+            $labTests = $lab ? (int) ($lab->form_data['section_a_volume']['total_tests'] ?? 0) : 0;
             $labTestsData[] = $labTests;
         }
 
