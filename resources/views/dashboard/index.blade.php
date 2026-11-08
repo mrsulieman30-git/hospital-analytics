@@ -1496,49 +1496,56 @@
          x-init="initChart()" 
          class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-5 shadow-xs space-y-4">
         
-        <!-- Live Diagnostic Header & Clinical Volume Bar -->
-        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
+        <!-- Google Finance Style Header: Primary Metric, Change Pill, Timestamp & Follow Action -->
+        <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
             <div>
-                <div class="flex items-center gap-2">
-                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse mr-1"></span>
-                        CLINICAL DIAGNOSTIC WORKLOAD TRACKER
+                <!-- Large Price/Metric Number + Change Pill -->
+                <div class="flex flex-wrap items-baseline gap-3">
+                    <span class="text-3xl sm:text-4xl font-extrabold font-mono text-slate-900 dark:text-white tracking-tight"
+                          x-text="Number(hoveredValue !== null ? hoveredValue : (ticker.latest_value || ticker.total_volume || 0)).toLocaleString()">
                     </span>
-                    <span class="text-xs text-slate-400 font-mono">LMS Examined Analytics</span>
+                    <span class="text-xs sm:text-sm font-bold text-slate-400 font-mono uppercase">
+                        TESTS
+                    </span>
+
+                    <!-- Percentage Change Pill with Google Finance styling -->
+                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-xs font-bold"
+                          :class="ticker.change_direction === 'up' ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-rose-500/10 text-rose-600 dark:text-rose-400'">
+                        <span x-text="ticker.change_direction === 'up' ? '↑' : '↓'"></span>
+                        <span x-text="ticker.change_percent || '0.0%'"></span>
+                        <span class="font-normal opacity-80" x-text="ticker.change_absolute ? ticker.change_absolute + ' period' : ''"></span>
+                    </span>
                 </div>
-                <h3 class="text-base font-black text-slate-900 dark:text-white tracking-tight mt-1 flex items-center gap-2">
-                    <span>Laboratory Diagnostic Volume Timeline &amp; Specialty Demand Analytics</span>
-                    <span class="text-xs font-mono font-normal text-slate-400">(Shift &amp; Multi-Period Analysis)</span>
-                </h3>
-                <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                    Universal adjustable timeline with multi-test workload tracking, period volume trends, and diagnostic demand trajectories.
-                </p>
+
+                <!-- Subtitle: Time, Status & Baseline Notice (Google Finance style) -->
+                <div class="text-xs text-slate-500 dark:text-slate-400 mt-1 flex flex-wrap items-center gap-x-2.5 gap-y-1 font-medium">
+                    <span x-text="hoveredLabel ? 'Timeline Slot: ' + hoveredLabel : 'Period Cycle: ' + (ticker.period_display || '1D') + ' Summary'"></span>
+                    <span class="text-slate-300 dark:text-slate-700">&bull;</span>
+                    <span>LMS Clinical Diagnostics</span>
+                    <span class="text-slate-300 dark:text-slate-700">&bull;</span>
+                    <span>Baseline Average: <strong class="text-slate-700 dark:text-slate-300 font-mono" x-text="Number(ticker.baseline_value || ticker.average_volume || 0).toLocaleString() + ' tests'"></strong></span>
+                </div>
             </div>
 
-            <!-- Clinical Operational Volume Summary Banner + Hide Action -->
-            <div class="flex items-center gap-3">
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 bg-slate-50 dark:bg-slate-800/60 p-2.5 rounded-xl border border-slate-200/60 dark:border-slate-700/60 text-xs font-mono">
-                    <div>
-                        <span class="text-[10px] text-slate-400 block uppercase">Total Tests Examined</span>
-                        <strong class="text-sm font-black text-slate-900 dark:text-white" x-text="Number(ticker.total_volume || 0).toLocaleString()"></strong>
-                    </div>
-                    <div>
-                        <span class="text-[10px] text-slate-400 block uppercase">Demand Trajectory</span>
-                        <span class="text-xs font-bold inline-flex items-center"
-                              :class="ticker.change_direction === 'up' ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'">
-                            <span x-text="ticker.change_direction === 'up' ? '▲ ' : '▼ '"></span>
-                            <span x-text="ticker.change_percent"></span>
-                        </span>
-                    </div>
-                    <div>
-                        <span class="text-[10px] text-slate-400 block uppercase">Peak Testing Demand</span>
-                        <strong class="text-xs font-bold text-slate-800 dark:text-slate-200" x-text="Number(ticker.period_high || 0).toLocaleString()"></strong>
-                    </div>
-                    <div>
-                        <span class="text-[10px] text-slate-400 block uppercase">Average Diagnostic Volume</span>
-                        <strong class="text-xs font-bold text-indigo-600 dark:text-indigo-400" x-text="Number(ticker.average_volume || 0).toLocaleString()"></strong>
-                    </div>
-                </div>
+            <!-- Right: Action Buttons (Like Google Finance + Follow) -->
+            <div class="flex items-center gap-2.5 self-start">
+                <button type="button"
+                        @click="setMetric(metric === 'total' ? 'multi' : 'total')"
+                        class="px-4 py-1.5 rounded-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-xs transition flex items-center gap-1.5 cursor-pointer">
+                    <i data-lucide="plus" class="w-3.5 h-3.5" x-show="metric === 'total'"></i>
+                    <i data-lucide="layers" class="w-3.5 h-3.5" x-show="metric === 'multi'"></i>
+                    <span x-text="metric === 'total' ? '+ Multi-Test Breakdown' : 'Aggregate Curve'"></span>
+                </button>
+
+                <!-- Specialty Filter Dropdown -->
+                <select x-model="selectedLabType"
+                        @change="onLabTypeChange()"
+                        class="px-3 py-1.5 text-xs rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-100 font-semibold focus:outline-hidden">
+                    <option value="all">All Specialties (13)</option>
+                    @foreach($labTypesMeta as $code => $meta)
+                        <option value="{{ $code }}">{{ $meta['label'] ?? ($meta['short'] ?? ucfirst($code)) }}</option>
+                    @endforeach
+                </select>
 
                 <button type="button" 
                         @click="toggleChart('lab')"
@@ -1549,75 +1556,70 @@
             </div>
         </div>
 
-        <!-- Controls: Timeframe Pills, Mode Switcher & Filter Tools -->
-        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
-            
-            <!-- Left: View Mode Toggle & Specialty Scope -->
-            <div class="flex flex-wrap items-center gap-2">
-                <div class="flex rounded-xl bg-slate-100 dark:bg-slate-800 p-1 text-xs font-bold">
-                    <button type="button"
-                            @click="setMetric('total')"
-                            class="px-3 py-1.5 rounded-lg transition flex items-center gap-1.5"
-                            :class="metric === 'total' ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'">
-                        <i data-lucide="trending-up" class="w-3.5 h-3.5 text-indigo-500"></i>
-                        <span>Aggregate Volume Trend</span>
-                    </button>
-                    <button type="button"
-                            @click="setMetric('multi')"
-                            class="px-3 py-1.5 rounded-lg transition flex items-center gap-1.5"
-                            :class="metric === 'multi' ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'">
-                        <i data-lucide="layers" class="w-3.5 h-3.5 text-purple-500"></i>
-                        <span>Comparative Test Breakdown</span>
-                    </button>
-                </div>
+        <!-- Google Finance Timeframe Tab Bar: 1D | 5D | 1M | 6M | YTD | 1Y | 5Y | Max -->
+        <div class="flex items-center gap-1 sm:gap-2 border-b border-slate-200 dark:border-slate-800 text-xs font-semibold overflow-x-auto py-1">
+            <button type="button"
+                    @click="setPeriod('1d')"
+                    class="px-3 py-1.5 transition border-b-2"
+                    :class="(period === '1d' || period === 'day') ? 'border-blue-600 text-blue-600 dark:text-blue-400 font-bold' : 'border-transparent text-slate-500 hover:text-slate-900 dark:hover:text-white'">
+                1D
+            </button>
+            <span class="text-slate-200 dark:text-slate-700 select-none">|</span>
 
-                <!-- Specialty Filter Dropdown -->
-                <select x-model="selectedLabType"
-                        @change="onLabTypeChange()"
-                        class="px-3 py-1.5 text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-100 font-semibold focus:outline-hidden">
-                    <option value="all">All Specialties (13)</option>
-                    @foreach($labTypesMeta as $code => $meta)
-                        <option value="{{ $code }}">{{ $meta['label'] ?? ($meta['short'] ?? ucfirst($code)) }}</option>
-                    @endforeach
-                </select>
-            </div>
+            <button type="button"
+                    @click="setPeriod('5d')"
+                    class="px-3 py-1.5 transition border-b-2"
+                    :class="period === '5d' ? 'border-blue-600 text-blue-600 dark:text-blue-400 font-bold' : 'border-transparent text-slate-500 hover:text-slate-900 dark:hover:text-white'">
+                5D
+            </button>
+            <span class="text-slate-200 dark:text-slate-700 select-none">|</span>
 
-            <!-- Right: Reporting Period Pills (1D, 1W, 1M, 1Y, 5Y) -->
-            <div class="flex items-center gap-2">
-                <span class="text-[11px] font-bold text-slate-400 uppercase font-mono">Period:</span>
-                <div class="flex rounded-xl bg-slate-100 dark:bg-slate-800 p-1 text-xs font-mono font-bold">
-                    <button type="button"
-                            @click="setPeriod('day')"
-                            class="px-2.5 py-1 rounded-lg transition"
-                            :class="period === 'day' ? 'bg-brand-primary text-white shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'">
-                        1D
-                    </button>
-                    <button type="button"
-                            @click="setPeriod('week')"
-                            class="px-2.5 py-1 rounded-lg transition"
-                            :class="period === 'week' ? 'bg-brand-primary text-white shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'">
-                        1W
-                    </button>
-                    <button type="button"
-                            @click="setPeriod('month')"
-                            class="px-2.5 py-1 rounded-lg transition"
-                            :class="period === 'month' ? 'bg-brand-primary text-white shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'">
-                        1M
-                    </button>
-                    <button type="button"
-                            @click="setPeriod('year')"
-                            class="px-2.5 py-1 rounded-lg transition"
-                            :class="period === 'year' ? 'bg-brand-primary text-white shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'">
-                        1Y
-                    </button>
-                    <button type="button"
-                            @click="setPeriod('5_years')"
-                            class="px-2.5 py-1 rounded-lg transition"
-                            :class="period === '5_years' ? 'bg-brand-primary text-white shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'">
-                        5Y
-                    </button>
-                </div>
-            </div>
+            <button type="button"
+                    @click="setPeriod('1m')"
+                    class="px-3 py-1.5 transition border-b-2"
+                    :class="(period === '1m' || period === 'month') ? 'border-blue-600 text-blue-600 dark:text-blue-400 font-bold' : 'border-transparent text-slate-500 hover:text-slate-900 dark:hover:text-white'">
+                1M
+            </button>
+            <span class="text-slate-200 dark:text-slate-700 select-none">|</span>
+
+            <button type="button"
+                    @click="setPeriod('6m')"
+                    class="px-3 py-1.5 transition border-b-2"
+                    :class="period === '6m' ? 'border-blue-600 text-blue-600 dark:text-blue-400 font-bold' : 'border-transparent text-slate-500 hover:text-slate-900 dark:hover:text-white'">
+                6M
+            </button>
+            <span class="text-slate-200 dark:text-slate-700 select-none">|</span>
+
+            <button type="button"
+                    @click="setPeriod('ytd')"
+                    class="px-3 py-1.5 transition border-b-2"
+                    :class="period === 'ytd' ? 'border-blue-600 text-blue-600 dark:text-blue-400 font-bold' : 'border-transparent text-slate-500 hover:text-slate-900 dark:hover:text-white'">
+                YTD
+            </button>
+            <span class="text-slate-200 dark:text-slate-700 select-none">|</span>
+
+            <button type="button"
+                    @click="setPeriod('1y')"
+                    class="px-3 py-1.5 transition border-b-2"
+                    :class="(period === '1y' || period === 'year') ? 'border-blue-600 text-blue-600 dark:text-blue-400 font-bold' : 'border-transparent text-slate-500 hover:text-slate-900 dark:hover:text-white'">
+                1Y
+            </button>
+            <span class="text-slate-200 dark:text-slate-700 select-none">|</span>
+
+            <button type="button"
+                    @click="setPeriod('5y')"
+                    class="px-3 py-1.5 transition border-b-2"
+                    :class="(period === '5y' || period === '5_years') ? 'border-blue-600 text-blue-600 dark:text-blue-400 font-bold' : 'border-transparent text-slate-500 hover:text-slate-900 dark:hover:text-white'">
+                5Y
+            </button>
+            <span class="text-slate-200 dark:text-slate-700 select-none">|</span>
+
+            <button type="button"
+                    @click="setPeriod('max')"
+                    class="px-3 py-1.5 transition border-b-2"
+                    :class="period === 'max' ? 'border-blue-600 text-blue-600 dark:text-blue-400 font-bold' : 'border-transparent text-slate-500 hover:text-slate-900 dark:hover:text-white'">
+                Max
+            </button>
         </div>
 
         <!-- Professional Clinical Test Dropdown Multi-Select Menu with Top "Select All" Option -->
@@ -2498,7 +2500,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.labDiagnosticTimelineComponent = function() {
         return {
-            period: initialLabTimeline.period || 'week',
+            period: initialLabTimeline.period || '1d',
             metric: initialLabTimeline.metric || 'total',
             selectedTests: initialLabTimeline.tests || ['CBC', 'GLUCOSE (RBS)', 'URINE ANALYSIS', 'TYPHOID IGM/IGG', 'TSH'],
             selectedLabType: 'all',
@@ -2507,11 +2509,13 @@ document.addEventListener('DOMContentLoaded', () => {
             testSearchQuery: '',
             showTestPicker: false,
             loading: false,
+            hoveredValue: null,
+            hoveredLabel: null,
             currentAbortController: null,
             ticker: initialLabTimeline.ticker || {},
             summaryList: (initialLabTimeline.timeline && initialLabTimeline.timeline.summary) ? initialLabTimeline.timeline.summary : [],
             colorPalette: [
-                '#10B981', '#3B82F6', '#8B5CF6', '#F59E0B', '#EF4444',
+                '#16A34A', '#2563EB', '#8B5CF6', '#F59E0B', '#DC2626',
                 '#06B6D4', '#EC4899', '#14B8A6', '#F97316', '#6366F1'
             ],
 
@@ -2579,11 +2583,45 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 const isDark = document.documentElement.classList.contains('dark');
-                const gridColor = isDark ? 'rgba(255, 255, 255, 0.06)' : 'rgba(0, 0, 0, 0.05)';
+                const gridColor = isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.04)';
                 const textColor = isDark ? '#94A3B8' : '#64748B';
 
                 const ctx = canvas.getContext('2d');
                 const datasets = this.formatDatasets(rawDatasets, ctx);
+                const self = this;
+                const baselineVal = this.ticker.baseline_value || this.ticker.average_volume || 0;
+
+                // Google Finance style baseline dotted line plugin
+                const baselinePlugin = {
+                    id: 'googleFinanceBaselinePlugin',
+                    afterDraw(chart) {
+                        if (!baselineVal || self.metric !== 'total') return;
+                        const yScale = chart.scales.y;
+                        const xScale = chart.scales.x;
+                        if (!yScale || !xScale) return;
+
+                        const yPos = yScale.getPixelForValue(baselineVal);
+                        if (yPos < yScale.top || yPos > yScale.bottom) return;
+
+                        const c = chart.ctx;
+                        c.save();
+                        c.beginPath();
+                        c.setLineDash([3, 4]);
+                        c.strokeStyle = isDark ? '#475569' : '#94A3B8';
+                        c.lineWidth = 1.2;
+                        c.moveTo(xScale.left, yPos);
+                        c.lineTo(xScale.right, yPos);
+                        c.stroke();
+
+                        // Right-aligned Google Finance baseline label e.g. "Previous close 281.74"
+                        c.setLineDash([]);
+                        c.fillStyle = isDark ? '#94A3B8' : '#64748B';
+                        c.font = '10px JetBrains Mono, monospace';
+                        c.textAlign = 'right';
+                        c.fillText(`Baseline ${Number(baselineVal).toLocaleString()}`, xScale.right - 6, yPos - 5);
+                        c.restore();
+                    }
+                };
 
                 liveLabChartInstance = new Chart(canvas, {
                     type: 'line',
@@ -2591,16 +2629,28 @@ document.addEventListener('DOMContentLoaded', () => {
                         labels: labels || [],
                         datasets: datasets
                     },
+                    plugins: [baselinePlugin],
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
                         animation: {
-                            duration: 300,
+                            duration: 250,
                             easing: 'easeOutQuart'
                         },
                         interaction: {
                             mode: 'index',
                             intersect: false
+                        },
+                        onHover: (event, activeElements) => {
+                            if (activeElements && activeElements.length > 0) {
+                                const el = activeElements[0];
+                                const ds = liveLabChartInstance.data.datasets[el.datasetIndex];
+                                self.hoveredValue = ds.data[el.index];
+                                self.hoveredLabel = liveLabChartInstance.data.labels[el.index];
+                            } else {
+                                self.hoveredValue = null;
+                                self.hoveredLabel = null;
+                            }
                         },
                         plugins: {
                             legend: {
@@ -2614,16 +2664,17 @@ document.addEventListener('DOMContentLoaded', () => {
                                 }
                             },
                             tooltip: {
-                                backgroundColor: isDark ? 'rgba(15, 23, 42, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+                                backgroundColor: isDark ? 'rgba(15, 23, 42, 0.95)' : 'rgba(255, 255, 255, 0.98)',
                                 titleColor: isDark ? '#F8FAFC' : '#0F172A',
-                                bodyColor: isDark ? '#CBD5E1' : '#334155',
-                                borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+                                bodyColor: isDark ? '#CBD5E1' : '#1E293B',
+                                borderColor: isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.12)',
                                 borderWidth: 1,
-                                padding: 10,
+                                padding: { top: 6, bottom: 6, left: 10, right: 10 },
+                                cornerRadius: 8,
+                                displayColors: this.metric === 'multi',
                                 callbacks: {
-                                    label: function(context) {
-                                        return `${context.dataset.label}: ${Number(context.raw || 0).toLocaleString()} tests`;
-                                    }
+                                    title: (items) => items[0]?.label || '',
+                                    label: (context) => `${context.dataset.label}: ${Number(context.raw || 0).toLocaleString()} tests`
                                 }
                             }
                         },
@@ -2633,6 +2684,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 ticks: { color: textColor, font: { size: 10 } }
                             },
                             y: {
+                                position: 'left',
                                 grid: { color: gridColor },
                                 ticks: {
                                     color: textColor,
@@ -2656,17 +2708,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
             formatDatasets(rawDatasets, ctx) {
                 return (rawDatasets || []).map((ds, idx) => {
-                    const color = ds.borderColor || ds.color || this.colorPalette[idx % this.colorPalette.length];
+                    const isUp = this.ticker.change_direction !== 'down';
+                    const defaultColor = isUp ? '#16A34A' : '#DC2626';
+                    const color = ds.borderColor || ds.color || (this.metric === 'total' ? defaultColor : this.colorPalette[idx % this.colorPalette.length]);
                     let bg = 'transparent';
 
                     if (this.metric === 'total' && ctx && ctx.canvas && ctx.canvas.height > 0) {
                         try {
                             const gradient = ctx.createLinearGradient(0, 0, 0, ctx.canvas.height || 320);
-                            gradient.addColorStop(0, 'rgba(16, 185, 129, 0.35)');
-                            gradient.addColorStop(1, 'rgba(16, 185, 129, 0.00)');
+                            gradient.addColorStop(0, isUp ? 'rgba(22, 163, 74, 0.18)' : 'rgba(220, 38, 38, 0.18)');
+                            gradient.addColorStop(1, isUp ? 'rgba(22, 163, 74, 0.00)' : 'rgba(220, 38, 38, 0.00)');
                             bg = gradient;
                         } catch (e) {
-                            bg = 'rgba(16, 185, 129, 0.1)';
+                            bg = 'rgba(22, 163, 74, 0.05)';
                         }
                     }
 
@@ -2676,11 +2730,13 @@ document.addEventListener('DOMContentLoaded', () => {
                         borderColor: color,
                         backgroundColor: bg,
                         fill: this.metric === 'total',
-                        tension: 0.35,
-                        borderWidth: 2.5,
-                        pointRadius: this.metric === 'total' ? 3 : 2.5,
+                        tension: 0.18,
+                        borderWidth: 2,
+                        pointRadius: this.metric === 'total' ? 0 : 2,
                         pointHoverRadius: 6,
-                        pointBackgroundColor: color
+                        pointHoverBackgroundColor: color,
+                        pointHoverBorderColor: '#FFFFFF',
+                        pointHoverBorderWidth: 2
                     };
                 });
             },

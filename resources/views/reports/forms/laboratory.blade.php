@@ -400,8 +400,29 @@
     updateTestCount(testName, count) {
         const item = this.allCatalogTests.find(t => t.test_name === testName);
         if (item) {
-            item.count = Math.max(0, parseInt(count || 0));
+            const strVal = String(count).trim();
+            if (strVal.startsWith('+')) {
+                // Inline additive entry e.g. "+5" -> old + 5!
+                const addVal = parseInt(strVal.substring(1)) || 0;
+                item.count = Math.max(0, (parseInt(item.count) || 0) + addVal);
+            } else {
+                item.count = Math.max(0, parseInt(count || 0));
+            }
             this.recalculateBenchFromTests();
+        }
+    },
+
+    addTestCountManual(testName, additional) {
+        const item = this.allCatalogTests.find(t => t.test_name === testName);
+        if (item) {
+            const addVal = parseInt(additional) || 0;
+            if (addVal !== 0) {
+                const oldCount = parseInt(item.count || 0);
+                item.count = Math.max(0, oldCount + addVal);
+                this.recalculateBenchFromTests();
+                this.lmsSuccessToast = `Manual entry added: +${addVal} to ${testName} (Old: ${oldCount} + New: ${addVal} = ${item.count} total)`;
+                setTimeout(() => { if (this.lmsSuccessToast.startsWith('Manual entry')) this.lmsSuccessToast = ''; }, 5000);
+            }
         }
     },
 
@@ -483,20 +504,22 @@
     applyLmsParsedData(data) {
         if (!data) return;
 
+        // When LMS report is uploaded on the same date, report is cumulative:
+        // Afternoon upload with 5 RBG updates morning 4 RBG -> total becomes 5 (not 9)
         if (data.bench_totals) {
-            this.benchHematology = data.bench_totals.haematology || 0;
-            this.benchBiochemistry = data.bench_totals.biochemistry || 0;
-            this.benchSerology = data.bench_totals.serology || 0;
-            this.benchHormones = data.bench_totals.hormones || 0;
-            this.benchUrine = data.bench_totals.urine || 0;
-            this.benchStool = data.bench_totals.stool || 0;
-            this.benchQuantitative = data.bench_totals.quantitative_test || 0;
-            this.benchCoagulation = data.bench_totals.coagulation_profile || 0;
-            this.benchMicrobiology = data.bench_totals.microbiology_parasitology || 0;
-            this.benchBloodBank = data.bench_totals.blood_bank || 0;
-            this.benchSemen = data.bench_totals.semen_analysis || 0;
-            this.benchTb = data.bench_totals.tb_analysis || 0;
-            this.benchBodyFluids = data.bench_totals.body_fluids || 0;
+            this.benchHematology = Math.max(parseInt(this.benchHematology || 0), parseInt(data.bench_totals.haematology || 0));
+            this.benchBiochemistry = Math.max(parseInt(this.benchBiochemistry || 0), parseInt(data.bench_totals.biochemistry || 0));
+            this.benchSerology = Math.max(parseInt(this.benchSerology || 0), parseInt(data.bench_totals.serology || 0));
+            this.benchHormones = Math.max(parseInt(this.benchHormones || 0), parseInt(data.bench_totals.hormones || 0));
+            this.benchUrine = Math.max(parseInt(this.benchUrine || 0), parseInt(data.bench_totals.urine || 0));
+            this.benchStool = Math.max(parseInt(this.benchStool || 0), parseInt(data.bench_totals.stool || 0));
+            this.benchQuantitative = Math.max(parseInt(this.benchQuantitative || 0), parseInt(data.bench_totals.quantitative_test || 0));
+            this.benchCoagulation = Math.max(parseInt(this.benchCoagulation || 0), parseInt(data.bench_totals.coagulation_profile || 0));
+            this.benchMicrobiology = Math.max(parseInt(this.benchMicrobiology || 0), parseInt(data.bench_totals.microbiology_parasitology || 0));
+            this.benchBloodBank = Math.max(parseInt(this.benchBloodBank || 0), parseInt(data.bench_totals.blood_bank || 0));
+            this.benchSemen = Math.max(parseInt(this.benchSemen || 0), parseInt(data.bench_totals.semen_analysis || 0));
+            this.benchTb = Math.max(parseInt(this.benchTb || 0), parseInt(data.bench_totals.tb_analysis || 0));
+            this.benchBodyFluids = Math.max(parseInt(this.benchBodyFluids || 0), parseInt(data.bench_totals.body_fluids || 0));
         }
 
         if (data.all_tests) {
@@ -508,21 +531,18 @@
             this.allCatalogTests.forEach(item => {
                 const k = item.test_name.toUpperCase();
                 if (map[k] !== undefined) {
-                    item.count = map[k];
-                } else {
-                    item.count = 0;
+                    // Cumulative: take the higher cumulative tally between existing and new LMS export
+                    item.count = Math.max(parseInt(item.count || 0), map[k]);
                 }
             });
         }
 
         if (data.total_tests_examined) {
-            if (this.totalLabTests === 0 || this.opdTests === 0) {
-                this.opdTests = data.total_tests_examined;
-            }
+            this.opdTests = Math.max(parseInt(this.opdTests || 0), parseInt(data.total_tests_examined || 0));
         }
 
         this.openDateMismatchModal = false;
-        this.lmsSuccessToast = '✓ LMS shift report imported successfully: ' + (data.ordered_tests_count || 0) + ' active test orders loaded (' + Number(data.total_tests_examined || 0).toLocaleString() + ' total tests).';
+        this.lmsSuccessToast = '✓ Cumulative LMS report imported: Latest shift totals reconciled cumulatively (' + (data.ordered_tests_count || 0) + ' active test orders, ' + Number(data.total_tests_examined || 0).toLocaleString() + ' total tests).';
         setTimeout(() => { this.lmsSuccessToast = ''; }, 7000);
         this.$nextTick(() => {
             if (window.lucide && typeof window.lucide.createIcons === 'function') {

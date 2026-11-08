@@ -570,12 +570,16 @@ class LmsLabReportParserService
         $dataPoints = [];
         $labels = [];
 
-        // Determine date range & step based on period
-        [$startDate, $endDate, $interval] = match ($period) {
-            'day' => [$now->copy()->startOfDay(), $now->copy()->endOfDay(), 'hourly'],
-            'month' => [$now->copy()->subDays(29)->startOfDay(), $now->copy()->endOfDay(), 'daily'],
-            'year' => [$now->copy()->subMonths(11)->startOfMonth(), $now->copy()->endOfMonth(), 'monthly'],
-            '5_years' => [$now->copy()->subYears(4)->startOfYear(), $now->copy()->endOfYear(), 'yearly'],
+        // Determine date range & step based on Google Finance style timeframe period
+        [$startDate, $endDate, $interval] = match (strtolower($period)) {
+            'day', '1d' => [$now->copy()->startOfDay(), $now->copy()->endOfDay(), 'hourly'],
+            '5d' => [$now->copy()->subDays(4)->startOfDay(), $now->copy()->endOfDay(), 'daily'],
+            'month', '1m' => [$now->copy()->subDays(29)->startOfDay(), $now->copy()->endOfDay(), 'daily'],
+            '6m' => [$now->copy()->subMonths(5)->startOfMonth(), $now->copy()->endOfMonth(), 'monthly'],
+            'ytd' => [$now->copy()->startOfYear(), $now->copy()->endOfDay(), 'monthly'],
+            'year', '1y' => [$now->copy()->subMonths(11)->startOfMonth(), $now->copy()->endOfMonth(), 'monthly'],
+            '5_years', '5y' => [$now->copy()->subYears(4)->startOfYear(), $now->copy()->endOfYear(), 'yearly'],
+            'max' => [$now->copy()->subYears(9)->startOfYear(), $now->copy()->endOfYear(), 'yearly'],
             default => [$now->copy()->subDays(6)->startOfDay(), $now->copy()->endOfDay(), 'daily'], // 'week'
         };
 
@@ -689,12 +693,16 @@ class LmsLabReportParserService
 
         // Build data points
         $n = count($labels);
-        $baseTotalVolume = match ($period) {
-            'day' => 220,
+        $baseTotalVolume = match (strtolower($period)) {
+            'day', '1d' => 220,
+            '5d' => 235,
             'week' => 240,
-            'month' => 250,
-            'year' => 7400,
-            '5_years' => 88000,
+            'month', '1m' => 250,
+            '6m' => 1400,
+            'ytd' => 4500,
+            'year', '1y' => 7400,
+            '5_years', '5y' => 88000,
+            'max' => 185000,
             default => 230,
         };
 
@@ -865,13 +873,28 @@ class LmsLabReportParserService
             }
         }
 
+        $changeAbs = $lastVal - $firstVal;
         $ticker = [
+            'latest_value' => $lastVal,
+            'baseline_value' => $avgTotal,
             'total_volume' => $sumTotal,
             'average_volume' => $avgTotal,
             'period_high' => $highTotal,
             'period_low' => $lowTotal,
+            'change_absolute' => ($changeAbs >= 0 ? '+' : '').number_format($changeAbs, 0),
             'change_percent' => ($changePct >= 0 ? '+' : '').$changePct.'%',
             'change_direction' => $changePct >= 0 ? 'up' : 'down',
+            'period_display' => match (strtolower($period)) {
+                'day', '1d' => '1D',
+                '5d' => '5D',
+                'month', '1m' => '1M',
+                '6m' => '6M',
+                'ytd' => 'YTD',
+                'year', '1y' => '1Y',
+                '5_years', '5y' => '5Y',
+                'max' => 'Max',
+                default => '1W',
+            },
         ];
 
         return [

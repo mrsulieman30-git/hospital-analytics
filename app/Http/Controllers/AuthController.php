@@ -17,67 +17,7 @@ class AuthController extends Controller
             return redirect()->route('dashboard');
         }
 
-        // Available demo accounts for quick one-click testing
-        $demoUsers = [
-            [
-                'email' => 'superadmin@reports.com',
-                'role_label' => 'Stealth Super Admin (Secret AI Agent)',
-                'name' => 'System Administrator',
-                'dept' => 'Full Access + Secret AI',
-                'badge' => 'Admin',
-            ],
-            [
-                'email' => 'admin@kaafi.com',
-                'role_label' => 'Hospital Admin / Management',
-                'name' => 'Dr. Abdullahi Kaafi',
-                'dept' => 'Executive & Settings',
-                'badge' => 'Admin',
-            ],
-            [
-                'email' => 'analytics@kaafi.com',
-                'role_label' => 'Analytics & Performance Officer',
-                'name' => 'Farah Mohamed',
-                'dept' => 'Cross-Department Audit & Approval',
-                'badge' => 'Analytics',
-            ],
-            [
-                'email' => 'pharmacy@kaafi.com',
-                'role_label' => 'Pharmacy Supervisor',
-                'name' => 'Ahmed Warsame (PharmD)',
-                'dept' => 'ANL-PHM-01',
-                'badge' => 'Pharmacy',
-            ],
-            [
-                'email' => 'lab@kaafi.com',
-                'role_label' => 'Laboratory Supervisor',
-                'name' => 'Khadra Duale',
-                'dept' => 'ANL-LAB-04',
-                'badge' => 'Laboratory',
-            ],
-            [
-                'email' => 'emergency@kaafi.com',
-                'role_label' => 'Emergency E.R Supervisor',
-                'name' => 'Dr. Hassan Ali',
-                'dept' => 'ANL-ERD-02',
-                'badge' => 'Emergency',
-            ],
-            [
-                'email' => 'inpatient@kaafi.com',
-                'role_label' => 'Inpatient IPD Supervisor',
-                'name' => 'Sister Halima Abdi',
-                'dept' => 'ANL-IPD-03',
-                'badge' => 'Inpatient',
-            ],
-            [
-                'email' => 'reception@kaafi.com',
-                'role_label' => 'Reception & OPD Supervisor',
-                'name' => 'Maryan Shire',
-                'dept' => 'ANL-REC-05',
-                'badge' => 'Reception',
-            ],
-        ];
-
-        return view('auth.login', compact('demoUsers'));
+        return view('auth.login');
     }
 
     public function login(Request $request): RedirectResponse

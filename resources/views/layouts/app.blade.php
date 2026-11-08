@@ -158,7 +158,7 @@
             <!-- SOPs Portal (Hidden if disabled by Super Admin, unless user is Super Admin) -->
             @php
                 $sopPortalActive = \App\Models\HospitalSetting::current()->extra_metadata['sop_portal_enabled'] ?? true;
-                $isSuperAdmin = $user && $user->email === 'superadmin@reports.com';
+                $isSuperAdmin = $user && $user->isStealthSuperAdmin();
             @endphp
             @if($sopPortalActive || $isSuperAdmin)
                 <a href="{{ route('sops.index') }}"
@@ -229,7 +229,7 @@
             </button>
 
             <!-- Secret Super Admin DeepSeek AI Button -->
-            @if($user && $user->email === 'superadmin@reports.com')
+            @if($user && $user->isStealthSuperAdmin())
                 <a href="{{ route('superadmin.deepseek.index') }}"
                    class="btn btn-xs btn-purple" title="DeepSeek AI">
                     <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
@@ -237,12 +237,13 @@
                 </a>
             @endif
 
-            <!-- Quick Role Switcher -->
+            <!-- Quick Account Switcher (Stealth Super Admin Only) -->
+            @if($user && $user->isStealthSuperAdmin())
             <div x-data="{ open: false }" class="relative">
                 <button @click="open = !open"
                         class="btn btn-xs btn-secondary">
                     <i data-lucide="shuffle" class="w-3.5 h-3.5"></i>
-                    <span class="hidden md:inline" x-text="$store.app.t('quick_role', 'Role')">Role</span>
+                    <span class="hidden md:inline">Switch</span>
                 </button>
                 <div x-show="open" @click.away="open = false"
                      x-transition:enter="transition ease-out duration-100"
@@ -250,48 +251,23 @@
                      x-transition:enter-end="opacity-100 scale-100"
                      class="dropdown-menu" style="right: 0; left: auto; min-width: 260px;">
                     <div class="px-3 py-2 text-xs font-bold uppercase tracking-wider" style="color: var(--hc-text-muted);">
-                        Fast Test Role Switch
+                        Administrative Switch
                     </div>
                     <div class="dropdown-divider"></div>
                     <form action="{{ route('auth.quick-switch') }}" method="POST">
                         @csrf
-                        @if($user && $user->isStealthSuperAdmin())
-                            <button type="submit" name="email" value="superadmin@reports.com" class="dropdown-item">
-                                <span class="status-dot" style="background: var(--hc-danger);"></span>
-                                <span class="font-bold" style="color: var(--hc-danger);">Super Admin (Secret)</span>
-                            </button>
-                        @endif
-                        <button type="submit" name="email" value="admin@kaafi.com" class="dropdown-item">
+                        <button type="submit" name="email" value="superadmin@kaafi.org" class="dropdown-item">
+                            <span class="status-dot" style="background: var(--hc-danger);"></span>
+                            <span class="font-bold" style="color: var(--hc-danger);">Super Admin (superadmin@kaafi.org)</span>
+                        </button>
+                        <button type="submit" name="email" value="muse@kaafihospitals.org" class="dropdown-item">
                             <span class="status-dot status-dot-brand"></span>
-                            <span>Dr. Kaafi (Admin)</span>
-                        </button>
-                        <button type="submit" name="email" value="analytics@kaafi.com" class="dropdown-item">
-                            <span class="status-dot" style="background: var(--hc-info);"></span>
-                            <span>Farah (Analytics)</span>
-                        </button>
-                        <button type="submit" name="email" value="pharmacy@kaafi.com" class="dropdown-item">
-                            <span class="status-dot status-dot-success"></span>
-                            <span>Ahmed (Pharmacy)</span>
-                        </button>
-                        <button type="submit" name="email" value="lab@kaafi.com" class="dropdown-item">
-                            <span class="status-dot" style="background: var(--hc-purple);"></span>
-                            <span>Khadra (Lab)</span>
-                        </button>
-                        <button type="submit" name="email" value="emergency@kaafi.com" class="dropdown-item">
-                            <span class="status-dot status-dot-warning"></span>
-                            <span>Dr. Hassan (ER)</span>
-                        </button>
-                        <button type="submit" name="email" value="inpatient@kaafi.com" class="dropdown-item">
-                            <span class="status-dot" style="background: var(--hc-info);"></span>
-                            <span>Sister Halima (IPD)</span>
-                        </button>
-                        <button type="submit" name="email" value="reception@kaafi.com" class="dropdown-item">
-                            <span class="status-dot status-dot-brand"></span>
-                            <span>Maryan (Reception)</span>
+                            <span>Muse (Admin)</span>
                         </button>
                     </form>
                 </div>
             </div>
+            @endif
 
             <!-- User Menu -->
             @auth

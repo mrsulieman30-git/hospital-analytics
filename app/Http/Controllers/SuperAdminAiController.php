@@ -29,7 +29,7 @@ class SuperAdminAiController extends Controller
     public function index(Request $request): View
     {
         $user = Auth::user();
-        if (! $user || $user->email !== 'superadmin@reports.com') {
+        if (! $user || ! $user->isStealthSuperAdmin()) {
             abort(404); // Stealth 404 to hide endpoint existence completely
         }
 
@@ -70,7 +70,7 @@ class SuperAdminAiController extends Controller
     public function analyze(Request $request): JsonResponse
     {
         $user = Auth::user();
-        if (! $user || $user->email !== 'superadmin@reports.com') {
+        if (! $user || ! $user->isStealthSuperAdmin()) {
             abort(404);
         }
 
@@ -99,7 +99,7 @@ class SuperAdminAiController extends Controller
     public function publish(Request $request): JsonResponse
     {
         $user = Auth::user();
-        if (! $user || $user->email !== 'superadmin@reports.com') {
+        if (! $user || ! $user->isStealthSuperAdmin()) {
             abort(404);
         }
 
@@ -136,7 +136,7 @@ class SuperAdminAiController extends Controller
     public function updateConfig(Request $request): RedirectResponse
     {
         $user = Auth::user();
-        if (! $user || $user->email !== 'superadmin@reports.com') {
+        if (! $user || ! $user->isStealthSuperAdmin()) {
             abort(404);
         }
 

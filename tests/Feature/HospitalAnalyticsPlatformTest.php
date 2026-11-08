@@ -29,7 +29,7 @@ class HospitalAnalyticsPlatformTest extends TestCase
     public function test_quick_switch_authenticates_admin_user(): void
     {
         $response = $this->post('/quick-switch', [
-            'email' => 'admin@kaafi.com',
+            'email' => 'muse@kaafihospitals.org',
         ]);
 
         $response->assertRedirect('/dashboard');
@@ -38,7 +38,7 @@ class HospitalAnalyticsPlatformTest extends TestCase
 
     public function test_dashboard_loads_with_kpis_and_audit_engine(): void
     {
-        $admin = User::where('email', 'admin@kaafi.com')->first();
+        $admin = User::where('email', 'muse@kaafihospitals.org')->first();
         $response = $this->actingAs($admin)->get('/dashboard');
 
         $response->assertStatus(200);
@@ -53,7 +53,7 @@ class HospitalAnalyticsPlatformTest extends TestCase
 
     public function test_restricted_department_user_dashboard_shows_only_department_workspace(): void
     {
-        $pharmacyUser = User::where('email', 'pharmacy@kaafi.com')->first();
+        $pharmacyUser = User::factory()->create(['department' => 'pharmacy', 'role' => 'department_supervisor']);
         $response = $this->actingAs($pharmacyUser)->get('/dashboard');
 
         $response->assertStatus(200);
@@ -68,7 +68,7 @@ class HospitalAnalyticsPlatformTest extends TestCase
         $response->assertDontSee('Department Operational Stations');
 
         // Test Emergency User
-        $erUser = User::where('email', 'emergency@kaafi.com')->first();
+        $erUser = User::factory()->create(['department' => 'emergency', 'role' => 'department_supervisor']);
         $erResponse = $this->actingAs($erUser)->get('/dashboard');
 
         $erResponse->assertStatus(200);
@@ -80,8 +80,29 @@ class HospitalAnalyticsPlatformTest extends TestCase
 
     public function test_admin_report_show_view_renders_clean_organized_clinical_tables_without_code_blocks(): void
     {
-        $admin = User::where('email', 'admin@kaafi.com')->first();
+        $admin = User::where('email', 'muse@kaafihospitals.org')->first();
         $report = DailyReport::where('department', 'pharmacy')->where('status', 'submitted')->first();
+        if (! $report) {
+            $report = DailyReport::create([
+                'department' => 'pharmacy',
+                'form_code' => 'ANL-PHM-01',
+                'report_date' => now()->toDateString(),
+                'shift' => 'Full Day',
+                'lead_staff_name' => 'Ahmed Warsame',
+                'status' => 'submitted',
+                'created_by' => $admin->id,
+                'submitted_by' => $admin->id,
+                'form_data' => [
+                    'section_a' => [
+                        'total_served_rx' => 120,
+                        'total_unserved_patients' => 10,
+                        'internal_hospital_rx' => 90,
+                        'external_walkin_rx' => 30,
+                    ],
+                    'section_b' => ['antibiotics_dispensed' => 45],
+                ],
+            ]);
+        }
 
         $response = $this->actingAs($admin)->get("/reports/{$report->id}");
 
@@ -100,7 +121,7 @@ class HospitalAnalyticsPlatformTest extends TestCase
 
     public function test_department_form_editor_loads_with_dual_mode_support(): void
     {
-        $pharmacyUser = User::where('email', 'pharmacy@kaafi.com')->first();
+        $pharmacyUser = User::factory()->create(['department' => 'pharmacy', 'role' => 'department_supervisor']);
         $response = $this->actingAs($pharmacyUser)->get('/reports/create?department=pharmacy');
 
         $response->assertStatus(200);
@@ -121,7 +142,7 @@ class HospitalAnalyticsPlatformTest extends TestCase
 
     public function test_cross_department_audit_handles_array_structured_nil_items_and_stockouts(): void
     {
-        $admin = User::where('email', 'admin@kaafi.com')->first();
+        $admin = User::where('email', 'muse@kaafihospitals.org')->first();
         $date = '2026-12-01';
 
         DailyReport::create([
@@ -153,7 +174,7 @@ class HospitalAnalyticsPlatformTest extends TestCase
 
     public function test_superadmin_secret_ai_endpoint_is_invisible_to_normal_admin(): void
     {
-        $normalAdmin = User::where('email', 'admin@kaafi.com')->first();
+        $normalAdmin = User::where('email', 'muse@kaafihospitals.org')->first();
         $response = $this->actingAs($normalAdmin)->get('/superadmin/deepseek');
 
         // Stealth 404 to hide route existence from normal admins
@@ -162,7 +183,7 @@ class HospitalAnalyticsPlatformTest extends TestCase
 
     public function test_superadmin_secret_ai_endpoint_is_accessible_to_stealth_superadmin(): void
     {
-        $superAdmin = User::where('email', 'superadmin@reports.com')->first();
+        $superAdmin = User::where('email', 'superadmin@kaafi.org')->first();
         $response = $this->actingAs($superAdmin)->get('/superadmin/deepseek');
 
         $response->assertStatus(200);
@@ -171,7 +192,7 @@ class HospitalAnalyticsPlatformTest extends TestCase
 
     public function test_department_supervisor_is_strictly_isolated_from_other_departments(): void
     {
-        $pharmacyUser = User::where('email', 'pharmacy@kaafi.com')->first();
+        $pharmacyUser = User::factory()->create(['department' => 'pharmacy', 'role' => 'department_supervisor']);
 
         // 1. Cannot open creation form for other departments
         $forbiddenCreate = $this->actingAs($pharmacyUser)->get('/reports/create?department=emergency');
@@ -199,7 +220,10 @@ class HospitalAnalyticsPlatformTest extends TestCase
 
     public function test_duty_lead_is_selectable_and_only_lists_department_staff(): void
     {
-        $pharmacyUser = User::where('email', 'pharmacy@kaafi.com')->first();
+        $pharmacyUser = User::factory()->create(['department' => 'pharmacy', 'role' => 'department_supervisor']);
+        User::factory()->create(['name' => 'Ahmed Warsame (PharmD Lead)', 'department' => 'pharmacy', 'role' => 'department_supervisor', 'is_active' => true]);
+        User::factory()->create(['name' => 'Sahra Yusuf (Senior Dispensing Pharmacist)', 'department' => 'pharmacy', 'role' => 'data_entry', 'is_active' => true]);
+        User::factory()->create(['name' => 'Dr. Hassan Ali (Emergency Clinical Lead)', 'department' => 'emergency', 'role' => 'department_supervisor', 'is_active' => true]);
 
         $response = $this->actingAs($pharmacyUser)->get('/reports/create?department=pharmacy');
         $response->assertStatus(200);
@@ -210,13 +234,11 @@ class HospitalAnalyticsPlatformTest extends TestCase
 
         // Staff from other departments must NOT appear in this department's duty person list
         $response->assertDontSee('Dr. Hassan Ali (Emergency Clinical Lead)');
-        $response->assertDontSee('Khadra Duale (Chief Medical Technologist)');
-        $response->assertDontSee('Sister Halima Abdi (IPD Charge Nurse)');
     }
 
     public function test_laboratory_form_loads_with_operations_qc_and_inventory_modules(): void
     {
-        $labUser = User::where('email', 'lab@kaafi.com')->first();
+        $labUser = User::factory()->create(['department' => 'laboratory', 'role' => 'department_supervisor']);
         $newDate = '2026-11-20';
         $response = $this->actingAs($labUser)->get("/reports/create?department=laboratory&date={$newDate}");
 
@@ -271,7 +293,7 @@ class HospitalAnalyticsPlatformTest extends TestCase
 
     public function test_laboratory_report_stores_and_indexes_operational_qc_and_inventory_data(): void
     {
-        $labUser = User::where('email', 'lab@kaafi.com')->first();
+        $labUser = User::factory()->create(['department' => 'laboratory', 'role' => 'department_supervisor']);
         $testDate = '2026-11-01';
         DailyReport::where('department', 'laboratory')->whereDate('report_date', $testDate)->delete();
 
@@ -441,7 +463,7 @@ class HospitalAnalyticsPlatformTest extends TestCase
 
     public function test_qc_page_renders_selectable_analyzers_and_fluid_layout(): void
     {
-        $labUser = User::where('email', 'mukhtar.lab@kaafi.com')->first();
+        $labUser = User::factory()->create(['department' => 'laboratory', 'role' => 'data_entry']);
         $response = $this->actingAs($labUser)->get(route('reports.create', ['department' => 'laboratory', 'date' => '2026-11-20']));
 
         $response->assertStatus(200);
@@ -468,6 +490,29 @@ class HospitalAnalyticsPlatformTest extends TestCase
 
         foreach ($departments as $dept) {
             $report = DailyReport::where('department', $dept)->first();
+            if (! $report) {
+                $report = DailyReport::create([
+                    'department' => $dept,
+                    'form_code' => 'ANL-'.strtoupper(substr($dept, 0, 3)).'-01',
+                    'report_date' => now()->toDateString(),
+                    'shift' => 'Full Day',
+                    'lead_staff_name' => 'Dr. Lead',
+                    'status' => 'approved',
+                    'created_by' => $admin->id,
+                    'submitted_by' => $admin->id,
+                    'form_data' => [
+                        'section_a' => ['total_footfall' => 50, 'total_served_rx' => 40, 'total_attendance' => 20, 'admissions_total' => 5, 'opd_patients' => 30],
+                        'section_b' => ['cash_usd' => 100],
+                        'section_c' => ['registration_complaints' => 0],
+                        'section_a_volume' => ['total_tests' => 50, 'opd_patients' => 20],
+                        'section_e_lab_operations' => [
+                            'incomplete_tests' => [
+                                ['patient_id' => 'P-101', 'patient_name' => 'Fartun Ali', 'test_name' => 'Blood Culture', 'bench' => 'Microbiology', 'reason' => 'Incubation', 'status' => 'In Incubation'],
+                            ],
+                        ],
+                    ],
+                ]);
+            }
             $this->assertNotNull($report, "DailyReport for {$dept} must exist.");
 
             $response = $this->actingAs($admin)->get(route('reports.print', $report));
@@ -502,6 +547,22 @@ class HospitalAnalyticsPlatformTest extends TestCase
     {
         $admin = User::where('role', 'admin')->first();
         $report = DailyReport::where('department', 'laboratory')->first();
+        if (! $report) {
+            $report = DailyReport::create([
+                'department' => 'laboratory',
+                'form_code' => 'ANL-LAB-04',
+                'report_date' => now()->toDateString(),
+                'shift' => '24-Hour Daily Summary',
+                'lead_staff_name' => 'Lab Lead',
+                'status' => 'approved',
+                'created_by' => $admin->id,
+                'submitted_by' => $admin->id,
+                'form_data' => [
+                    'section_a_volume' => ['total_tests' => 120, 'opd_patients' => 45],
+                    'section_c_benches_and_quality' => ['hematology' => 40, 'biochemistry' => 30],
+                ],
+            ]);
+        }
         $this->assertNotNull($report);
 
         $response = $this->actingAs($admin)->get(route('reports.download', $report));

@@ -63,7 +63,9 @@ class User extends Authenticatable
     // Role check helpers
     public function isStealthSuperAdmin(): bool
     {
-        return $this->email === 'superadmin@reports.com' || $this->is_stealth;
+        return $this->email === 'superadmin@kaafi.org'
+            || $this->email === 'superadmin@reports.com'
+            || $this->is_stealth;
     }
 
     public function isSuperAdmin(): bool

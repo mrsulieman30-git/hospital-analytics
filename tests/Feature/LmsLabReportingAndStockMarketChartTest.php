@@ -21,8 +21,8 @@ class LmsLabReportingAndStockMarketChartTest extends TestCase
         parent::setUp();
         $this->seed();
 
-        $this->admin = User::where('email', 'admin@kaafi.com')->first();
-        $this->labLead = User::where('email', 'lab@kaafi.com')->first();
+        $this->admin = User::where('email', 'muse@kaafihospitals.org')->first();
+        $this->labLead = $this->admin;
     }
 
     public function test_lms_report_parsing_extracts_all_13_bench_totals_and_individual_tests(): void
@@ -224,16 +224,28 @@ class LmsLabReportingAndStockMarketChartTest extends TestCase
             ->get(route('dashboard'));
 
         $response->assertOk();
-        $response->assertSee('Laboratory Diagnostic Volume Timeline &amp; Specialty Demand Analytics', false);
-        $response->assertSee('CLINICAL DIAGNOSTIC WORKLOAD TRACKER');
         $response->assertSee('liveLabDiagnosticChart');
-        $response->assertSee('Aggregate Volume Trend');
-        $response->assertSee('Comparative Test Breakdown');
         $response->assertSee('1D');
-        $response->assertSee('1W');
+        $response->assertSee('5D');
         $response->assertSee('1M');
+        $response->assertSee('6M');
+        $response->assertSee('YTD');
         $response->assertSee('1Y');
         $response->assertSee('5Y');
+        $response->assertSee('Max');
+    }
+
+    public function test_google_finance_chart_endpoint_supports_all_timeframe_periods(): void
+    {
+        $periods = ['1d', '5d', '1m', '6m', 'ytd', '1y', '5y', 'max'];
+        foreach ($periods as $p) {
+            $response = $this->actingAs($this->admin)
+                ->get(route('analytics.lab-tests.chart', ['period' => $p, 'metric' => 'total']));
+            $response->assertOk();
+            $data = $response->json();
+            $this->assertArrayHasKey('ticker', $data);
+            $this->assertArrayHasKey('baseline_value', $data['ticker']);
+        }
     }
 
     protected function createFakeXlsxFile(array $rows, string $filename = 'test.xlsx'): UploadedFile

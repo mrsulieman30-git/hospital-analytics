@@ -465,8 +465,9 @@
                             </h3>
                             <span class="hc-badge hc-badge-info font-mono text-[11px]" x-text="orderedTests.length + ' Tests Ordered Today'"></span>
                         </div>
-                        <p class="text-xs text-[var(--hc-text-muted)]">
-                            Only tests with orders on this shift are displayed by default, while the full catalog is preserved in the background.
+                        <p class="text-xs text-[var(--hc-text-muted)] flex flex-wrap items-center gap-2 mt-0.5">
+                            <span>LMS uploads on same date are <strong>cumulative</strong> (e.g. morning 4 + afternoon 5 &rarr; total 5).</span>
+                            <span class="text-emerald-500 font-medium">&bull; Manual entries are <strong>additive (old + new)</strong>.</span>
                         </p>
                     </div>
                 </div>
@@ -530,9 +531,10 @@
                             <tr>
                                 <th class="w-10 text-center">#</th>
                                 <th>Test Examination Name</th>
-                                <th class="w-48">LMS Lab Type</th>
-                                <th class="w-40 text-center">Examined Count</th>
-                                <th class="w-24 text-right">Quick Adjust</th>
+                                <th class="w-40">LMS Lab Type</th>
+                                <th class="w-32 text-center">Examined Count</th>
+                                <th class="w-52 text-center">+ Add Manual Tests (Old + New)</th>
+                                <th class="w-32 text-right">Quick Steppers</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -559,20 +561,49 @@
                                                min="0"
                                                :value="test.count || 0"
                                                @input="updateTestCount(test.test_name, $event.target.value)"
-                                               class="hc-input font-mono font-bold text-sm text-center py-1 w-28 mx-auto"
-                                               placeholder="0">
+                                               class="hc-input font-mono font-bold text-sm text-center py-1 w-24 mx-auto"
+                                               placeholder="0"
+                                               title="Total tests examined (or type +5 to add 5)">
+                                    </td>
+                                    <td class="text-center" x-data="{ manualAddQty: '' }">
+                                        <div class="inline-flex items-center gap-1.5">
+                                            <div class="relative w-20">
+                                                <span class="absolute left-2 top-1/2 -translate-y-1/2 text-xs font-bold text-emerald-500">+</span>
+                                                <input type="number"
+                                                       min="1"
+                                                       x-model.number="manualAddQty"
+                                                       @keydown.enter.prevent="if(manualAddQty > 0) { addTestCountManual(test.test_name, manualAddQty); manualAddQty = ''; }"
+                                                       class="hc-input font-mono font-bold text-xs pl-5 pr-1 py-1 text-center w-full bg-emerald-500/5 border-emerald-500/30 focus:border-emerald-500"
+                                                       placeholder="Qty">
+                                            </div>
+                                            <button type="button"
+                                                    @click="if(manualAddQty > 0) { addTestCountManual(test.test_name, manualAddQty); manualAddQty = ''; }"
+                                                    :disabled="!manualAddQty || manualAddQty <= 0"
+                                                    class="btn btn-xs bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-2 py-1 shadow-xs disabled:opacity-30 disabled:pointer-events-none"
+                                                    title="Add tests (adds to existing count: old + new)">
+                                                + Add
+                                            </button>
+                                        </div>
                                     </td>
                                     <td class="text-right">
                                         <div class="inline-flex items-center gap-1">
                                             <button type="button"
                                                     @click="updateTestCount(test.test_name, Math.max(0, (parseInt(test.count) || 0) - 1))"
-                                                    class="btn btn-secondary btn-xs px-2 py-1">
-                                                -
+                                                    class="btn btn-secondary btn-xs px-1.5 py-1"
+                                                    title="Decrease 1">
+                                                -1
                                             </button>
                                             <button type="button"
-                                                    @click="updateTestCount(test.test_name, (parseInt(test.count) || 0) + 1)"
-                                                    class="btn btn-secondary btn-xs px-2 py-1">
-                                                +
+                                                    @click="addTestCountManual(test.test_name, 1)"
+                                                    class="btn btn-secondary btn-xs px-1.5 py-1 text-emerald-500 font-bold"
+                                                    title="Add +1 to existing total">
+                                                +1
+                                            </button>
+                                            <button type="button"
+                                                    @click="addTestCountManual(test.test_name, 5)"
+                                                    class="btn btn-secondary btn-xs px-1.5 py-1 text-emerald-500 font-bold"
+                                                    title="Add +5 to existing total">
+                                                +5
                                             </button>
                                         </div>
                                     </td>

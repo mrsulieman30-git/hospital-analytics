@@ -25,7 +25,7 @@ class SopPortalTest extends TestCase
 
     public function test_superadmin_can_access_sop_portal_and_view_procedures(): void
     {
-        $superadmin = User::where('email', 'superadmin@reports.com')->first();
+        $superadmin = User::where('email', 'superadmin@kaafi.org')->first();
 
         // Create a test SOP
         $sop = Sop::create([
@@ -57,7 +57,7 @@ class SopPortalTest extends TestCase
 
     public function test_superadmin_can_toggle_portal_on_and_off(): void
     {
-        $superadmin = User::where('email', 'superadmin@reports.com')->first();
+        $superadmin = User::where('email', 'superadmin@kaafi.org')->first();
 
         // Default state should be active
         $response = $this->actingAs($superadmin)->patch(route('superadmin.sops.toggle'));
@@ -76,9 +76,9 @@ class SopPortalTest extends TestCase
 
     public function test_admin_and_staff_cannot_access_or_see_portal_when_turned_off(): void
     {
-        $superadmin = User::where('email', 'superadmin@reports.com')->first();
-        $admin = User::where('email', 'admin@kaafi.com')->first();
-        $pharmacyUser = User::where('email', 'pharmacy@kaafi.com')->first();
+        $superadmin = User::where('email', 'superadmin@kaafi.org')->first();
+        $admin = User::where('email', 'muse@kaafihospitals.org')->first();
+        $pharmacyUser = User::factory()->create(['department' => 'pharmacy', 'role' => 'department_supervisor']);
 
         // Turn portal OFF
         $setting = HospitalSetting::current();
@@ -107,8 +107,8 @@ class SopPortalTest extends TestCase
 
     public function test_download_permission_enforcement_by_superadmin(): void
     {
-        $superadmin = User::where('email', 'superadmin@reports.com')->first();
-        $admin = User::where('email', 'admin@kaafi.com')->first();
+        $superadmin = User::where('email', 'superadmin@kaafi.org')->first();
+        $admin = User::where('email', 'muse@kaafihospitals.org')->first();
 
         // Put a fake file in storage
         Storage::disk('public')->put('sops/test_restricted.pdf', 'dummy content');
@@ -148,7 +148,7 @@ class SopPortalTest extends TestCase
 
     public function test_leaflet_photo_upload(): void
     {
-        $superadmin = User::where('email', 'superadmin@reports.com')->first();
+        $superadmin = User::where('email', 'superadmin@kaafi.org')->first();
 
         $sop = Sop::create([
             'title' => 'CBC Testing Protocol',
@@ -184,7 +184,7 @@ class SopPortalTest extends TestCase
         $loginResponse->assertSee('Mohammad Sulieman');
 
         // 2. On authenticated app pages (Dashboard)
-        $admin = User::where('email', 'admin@kaafi.com')->first();
+        $admin = User::where('email', 'muse@kaafihospitals.org')->first();
         $dashboardResponse = $this->actingAs($admin)->get('/dashboard');
         $dashboardResponse->assertStatus(200);
         $dashboardResponse->assertSee('SEHTECH Healthcare Solutions');
@@ -193,7 +193,7 @@ class SopPortalTest extends TestCase
 
     public function test_sop_template_auto_extraction_from_pasted_text(): void
     {
-        $superadmin = User::where('email', 'superadmin@reports.com')->first();
+        $superadmin = User::where('email', 'superadmin@kaafi.org')->first();
 
         $templateText = <<<TXT
 CREATINE KINASE-MB (CK-MB) — FINECARE™ FIA

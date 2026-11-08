@@ -99,8 +99,8 @@ class DashboardController extends Controller
         // Trend series for Chart.js matching filtered period
         $weeklyTrend = $this->kpiService->getWeeklyTrend($startDate, $endDate);
 
-        // Universal Live Lab Tests Stock Market Chart initial payload
-        $labTestTimeline = $this->lmsParser->getTimelineData('week', ['CBC', 'GLUCOSE (RBS)', 'URINE ANALYSIS', 'TYPHOID IGM/IGG', 'TSH'], 'total');
+        // Universal Live Lab Tests Stock Market Chart initial payload (Google Finance 1D default)
+        $labTestTimeline = $this->lmsParser->getTimelineData('1d', ['CBC', 'GLUCOSE (RBS)', 'URINE ANALYSIS', 'TYPHOID IGM/IGG', 'TSH'], 'total');
         $labCatalog = LmsLabReportParserService::getFormattedCatalog();
         $labTypesMeta = LmsLabReportParserService::LAB_TYPES;
 
