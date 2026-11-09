@@ -1,13 +1,22 @@
 <!DOCTYPE html>
-<html lang="en" class="h-full bg-[#030d22]">
+<html lang="en" class="h-screen max-h-screen overflow-hidden bg-[#030d22]">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
     <meta name="description" content="Kaafi Hospitals Specialized Clinical Analytics & Operations Intelligence Portal">
     <title>Kaafi Hospitals — Clinical Analytics &amp; Operations Portal</title>
     <link rel="icon" type="image/png" href="{{ asset('images/kaafi_logo.png') }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
+        html, body {
+            height: 100vh;
+            max-height: 100vh;
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+            touch-action: pan-x pan-y;
+        }
+
         /* Ambient Brick Wall Base & Lighting */
         .brick-wall-dark {
             background-image: url('{{ asset('images/dark_brick_wall_hd.jpg') }}');
@@ -25,19 +34,19 @@
 
         /* Glassmorphic Frosted Login Card */
         .glass-login-card {
-            background: rgba(18, 28, 54, 0.42);
+            background: rgba(18, 28, 54, 0.45);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.18);
-            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.65), 0 0 40px rgba(255, 220, 130, 0.12);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.65), 0 0 40px rgba(255, 220, 130, 0.12);
         }
 
         .glass-login-card.card-dimmed {
-            background: rgba(8, 14, 28, 0.60);
+            background: rgba(8, 14, 28, 0.65);
             backdrop-filter: blur(14px);
             -webkit-backdrop-filter: blur(14px);
             border: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.85);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.85);
         }
 
         /* Pill Input Fields matching reference image */
@@ -86,7 +95,7 @@
         }
     </style>
 </head>
-<body class="h-full bg-[#030d22] text-slate-100 antialiased overflow-x-hidden selection:bg-amber-400 selection:text-slate-950 flex flex-col justify-between"
+<body class="h-screen max-h-screen w-screen overflow-hidden fixed inset-0 bg-[#030d22] text-slate-100 antialiased selection:bg-amber-400 selection:text-slate-950 flex flex-col justify-between"
       x-data="lampScene()"
       x-init="initScene()">
 
@@ -100,74 +109,61 @@
     <!-- LAYER 3: Volumetric Radiant Ambient Bloom (Behind form) -->
     <div class="fixed inset-0 z-0 pointer-events-none flex items-center justify-center overflow-hidden transition-opacity duration-700 ease-out"
          :style="'opacity: ' + (lightOn ? '0.85' : '0')">
-        <div class="w-[620px] h-[520px] rounded-full bg-radial from-amber-200/25 via-amber-400/10 to-transparent blur-3xl -translate-y-8"></div>
+        <div class="w-[560px] h-[480px] rounded-full bg-radial from-amber-200/25 via-amber-400/10 to-transparent blur-3xl -translate-y-8"></div>
     </div>
 
-    <!-- TOP HEADER: Minimalist Hospital Identity -->
-    <header class="relative z-20 w-full px-6 py-4 sm:px-10 flex items-center justify-between">
-        <div class="flex items-center gap-3">
-            <img src="{{ asset('images/kaafi_logo.png') }}" 
-                 alt="Kaafi Hospitals Logo" 
-                 class="h-9 sm:h-10 w-auto object-contain drop-shadow-[0_2px_10px_rgba(0,0,0,0.5)]">
-            <div>
-                <span class="text-sm sm:text-base font-extrabold tracking-tight text-white block leading-tight">Kaafi Hospitals</span>
-                <span class="text-[10px] sm:text-xs text-slate-300/80 uppercase tracking-wider font-medium">Operations &amp; Analytics Portal</span>
-            </div>
-        </div>
-
-        <div class="flex items-center gap-3">
-            <!-- Light Status Badge (Clickable alternative) -->
-            <button type="button" 
-                    @click="triggerPull()"
-                    class="px-3 py-1.5 rounded-full text-xs font-mono backdrop-blur-md border transition-all duration-300 flex items-center gap-2 cursor-pointer"
-                    :class="lightOn ? 'bg-amber-400/15 border-amber-400/40 text-amber-200 hover:bg-amber-400/25' : 'bg-slate-800/60 border-slate-700 text-slate-400 hover:bg-slate-700/60'">
-                <span class="w-2 h-2 rounded-full transition-colors duration-300"
-                      :class="lightOn ? 'bg-amber-400 shadow-[0_0_8px_#fbbf24]' : 'bg-slate-500'"></span>
-                <span x-text="lightOn ? 'Light ON' : 'Light OFF'"></span>
-            </button>
-        </div>
+    <!-- TOP BAR: Clean Minimalist Header (Top-left logo removed as requested) -->
+    <header class="relative z-20 w-full px-5 py-2 sm:px-8 flex items-center justify-end shrink-0">
+        <!-- Light Status Badge (Clickable alternative to the rope switch) -->
+        <button type="button" 
+                @click="triggerPull()"
+                class="px-2.5 py-1 rounded-full text-xs font-mono backdrop-blur-md border transition-all duration-300 flex items-center gap-1.5 cursor-pointer"
+                :class="lightOn ? 'bg-amber-400/15 border-amber-400/40 text-amber-200 hover:bg-amber-400/25' : 'bg-slate-800/60 border-slate-700 text-slate-400 hover:bg-slate-700/60'">
+            <span class="w-2 h-2 rounded-full transition-colors duration-300"
+                  :class="lightOn ? 'bg-amber-400 shadow-[0_0_8px_#fbbf24]' : 'bg-slate-500'"></span>
+            <span x-text="lightOn ? 'Light ON' : 'Light OFF'"></span>
+        </button>
     </header>
 
-    <!-- MAIN SCENE: Lamp Assembly + Interactive Pull Rope + Floating Glass Login Card -->
-    <main class="relative z-10 flex-1 flex flex-col items-center justify-center px-4 py-4 sm:py-6">
+    <!-- MAIN SCENE: Auto-Adjustable & Non-Scrollable Centered View -->
+    <main class="relative z-10 flex-1 flex flex-col items-center justify-center px-4 py-1 sm:py-2 min-h-0">
         
         <!-- ======================================================== -->
         <!-- LAMP & INTERACTIVE PULL-CORD ASSEMBLY                    -->
         <!-- ======================================================== -->
-        <div class="relative w-full max-w-[440px] flex flex-col items-center mb-2 z-30">
+        <div class="relative w-full max-w-[420px] flex flex-col items-center mb-1 sm:mb-2 z-30 shrink-0">
             
             <!-- Wall Lamp Fixture (Trapezoidal Sconce matching reference) -->
             <div class="relative z-20 flex flex-col items-center">
                 <!-- Mounting Bracket Plate -->
-                <div class="w-16 h-2 bg-slate-900 rounded-t-sm shadow-md border-t border-slate-700/60"></div>
+                <div class="w-14 h-1.5 bg-slate-900 rounded-t-sm shadow-md border-t border-slate-700/60"></div>
                 
                 <!-- Main Trapezoid Metal Lamp Fixture -->
-                <div class="w-28 sm:w-32 h-13 sm:h-14 bg-gradient-to-b from-[#182a4d] via-[#0d1a33] to-[#081224] lamp-trapezoid shadow-2xl relative overflow-hidden flex flex-col justify-end border-t border-cyan-400/20">
+                <div class="w-24 sm:w-28 h-10 sm:h-11 bg-gradient-to-b from-[#182a4d] via-[#0d1a33] to-[#081224] lamp-trapezoid shadow-2xl relative overflow-hidden flex flex-col justify-end border-t border-cyan-400/20">
                     <!-- Subtle metallic top rim highlight -->
                     <div class="absolute inset-x-2 top-0.5 h-[1px] bg-gradient-to-r from-transparent via-cyan-300/40 to-transparent"></div>
 
                     <!-- Underside Glowing Glass Diffuser Bar -->
-                    <div class="w-full h-3 sm:h-3.5 transition-all duration-500 ease-out flex items-center justify-center"
-                         :class="lightOn ? 'bg-gradient-to-r from-amber-200 via-white to-amber-200 shadow-[0_0_35px_12px_rgba(255,235,160,0.95),0_0_70px_25px_rgba(245,158,11,0.7)]' : 'bg-[#0a1424] border-t border-slate-800 shadow-none'">
+                    <div class="w-full h-2.5 sm:h-3 transition-all duration-500 ease-out flex items-center justify-center"
+                         :class="lightOn ? 'bg-gradient-to-r from-amber-200 via-white to-amber-200 shadow-[0_0_30px_10px_rgba(255,235,160,0.95),0_0_60px_20px_rgba(245,158,11,0.7)]' : 'bg-[#0a1424] border-t border-slate-800 shadow-none'">
                         <!-- Core light filament line when lit -->
-                        <div class="w-3/4 h-[2px] transition-opacity duration-300"
+                        <div class="w-3/4 h-[1.5px] transition-opacity duration-300"
                              :class="lightOn ? 'bg-white opacity-100' : 'opacity-0'"></div>
                     </div>
                 </div>
 
                 <!-- Hotspot Bloom underneath the lamp -->
-                <div class="absolute -bottom-8 pointer-events-none transition-opacity duration-500 ease-out"
+                <div class="absolute -bottom-6 pointer-events-none transition-opacity duration-500 ease-out"
                      :class="lightOn ? 'opacity-100 scale-100' : 'opacity-0 scale-90'">
-                    <div class="w-48 h-20 bg-radial from-amber-100/90 via-amber-300/40 to-transparent blur-lg"></div>
+                    <div class="w-40 h-16 bg-radial from-amber-100/90 via-amber-300/40 to-transparent blur-md"></div>
                 </div>
             </div>
 
             <!-- INTERACTIVE PULL ROPE / CORD WITH NATURAL SPRING PHYSICS -->
-            <!-- Positioned hanging from the right underside of the lamp fixture -->
-            <div class="absolute top-[48px] sm:top-[52px] left-[calc(50%+46px)] sm:left-[calc(50%+52px)] w-[140px] h-[220px] pointer-events-none z-40">
+            <div class="absolute top-[38px] sm:top-[42px] left-[calc(50%+40px)] sm:left-[calc(50%+46px)] w-[140px] h-[190px] pointer-events-none z-40">
                 <svg id="rope-svg" 
                      class="w-full h-full overflow-visible pointer-events-none" 
-                     viewBox="0 0 140 220">
+                     viewBox="0 0 140 190">
                     <defs>
                         <!-- Brass bead / cord gradient -->
                         <linearGradient id="brassGradient" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -193,37 +189,36 @@
 
                     <!-- The Flexible Rope Path (dynamically updated by physics engine) -->
                     <path id="rope-path" 
-                          d="M 20 0 Q 20 60 20 120" 
+                          d="M 20 0 Q 20 50 20 100" 
                           stroke="url(#brassGradient)" 
-                          stroke-width="2.5" 
+                          stroke-width="2.2" 
                           stroke-linecap="round"
-                          fill="none" 
-                          stroke-dasharray="1 0" />
+                          fill="none" />
 
                     <!-- The Pull Knob / Handle Group (Draggable & Clickable) -->
                     <g id="rope-handle-group" 
-                       transform="translate(20, 120)" 
+                       transform="translate(20, 100)" 
                        class="cord-grabber pointer-events-auto"
                        @pointerdown="onCordPointerDown($event)">
                         
-                        <!-- Invisible larger touch/hit target for effortless mobile/mouse grabbing -->
+                        <!-- Invisible larger touch target for effortless grabbing -->
                         <circle cx="0" cy="10" r="24" fill="transparent" />
 
                         <!-- Top attachment bead ring -->
-                        <circle cx="0" cy="0" r="3" fill="url(#brassGradient)" stroke="#78350f" stroke-width="0.5" />
+                        <circle cx="0" cy="0" r="2.8" fill="url(#brassGradient)" stroke="#78350f" stroke-width="0.5" />
                         
-                        <!-- Elegant Teardrop / Bell Brass Pull Weight -->
-                        <path d="M -3 3 L 3 3 L 6 16 C 6 20 3 23 0 23 C -3 23 -6 20 -6 16 Z" 
+                        <!-- Elegant Teardrop Brass Pull Weight -->
+                        <path d="M -3 3 L 3 3 L 5.5 15 C 5.5 19 3 22 0 22 C -3 22 -5.5 19 -5.5 15 Z" 
                               fill="url(#knobGradient)" 
                               stroke="#78350f" 
                               stroke-width="0.8" 
                               filter="url(#knobGlow)" />
                         
                         <!-- Bottom small metallic ring bead -->
-                        <circle cx="0" cy="24" r="2.5" fill="url(#brassGradient)" />
+                        <circle cx="0" cy="23" r="2.2" fill="url(#brassGradient)" />
 
                         <!-- Specular highlight on pull handle -->
-                        <path d="M -1.5 6 L 1.5 6 L 2 15 C 2 17 0.5 19 0 19" 
+                        <path d="M -1.2 5 L 1.2 5 L 1.8 14 C 1.8 16 0.5 18 0 18" 
                               stroke="rgba(255,255,255,0.7)" 
                               stroke-width="0.8" 
                               stroke-linecap="round" 
@@ -234,7 +229,7 @@
                 <!-- Floating Pull Hint Tooltip (disappears once pulled) -->
                 <div x-show="showHint" 
                      x-transition.opacity.duration.400ms
-                     class="absolute left-[36px] top-[108px] bg-slate-900/90 border border-amber-400/40 text-amber-200 text-[10px] font-semibold px-2.5 py-1 rounded-full whitespace-nowrap shadow-xl pointer-events-none cord-hint-anim flex items-center gap-1.5 backdrop-blur-md">
+                     class="absolute left-[34px] top-[90px] bg-slate-900/90 border border-amber-400/40 text-amber-200 text-[10px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap shadow-xl pointer-events-none cord-hint-anim flex items-center gap-1 backdrop-blur-md">
                     <span>💡 Pull to toggle</span>
                 </div>
             </div>
@@ -242,30 +237,30 @@
 
         <!-- ======================================================== -->
         <!-- FLOATING GLASSMORPHISM LOGIN CARD                        -->
-        <!-- Matches media_1794110983270_10fa23f5.webp exactly        -->
+        <!-- Auto-adjustable to screen size, fits within 100vh        -->
         <!-- ======================================================== -->
-        <div class="w-full max-w-[390px] sm:max-w-[420px] transition-all duration-500 ease-out">
-            <div class="glass-login-card rounded-3xl p-7 sm:p-9 text-white transition-all duration-500"
+        <div class="w-full max-w-[360px] sm:max-w-[385px] transition-all duration-500 ease-out shrink-0">
+            <div class="glass-login-card rounded-2xl sm:rounded-3xl p-5 sm:p-7 text-white transition-all duration-500"
                  :class="{ 'card-dimmed': !lightOn }">
 
-                <!-- Header: Hospital Crest & Bold "Login" title matching reference -->
-                <div class="text-center mb-6">
-                    <div class="inline-flex items-center justify-center mb-2.5">
+                <!-- Header: Clean Crest & Bold "Login" title -->
+                <div class="text-center mb-4 sm:mb-5">
+                    <div class="inline-flex items-center justify-center mb-1.5">
                         <img src="{{ asset('images/kaafi_logo.png') }}" 
                              alt="Kaafi Hospitals" 
-                             class="h-10 w-auto object-contain drop-shadow-[0_2px_12px_rgba(255,255,255,0.25)]">
+                             class="h-8 sm:h-9 w-auto object-contain drop-shadow-[0_2px_10px_rgba(255,255,255,0.2)]">
                     </div>
-                    <h2 class="text-3xl font-extrabold tracking-tight text-white">
+                    <h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">
                         Login
                     </h2>
-                    <p class="text-xs text-slate-300/80 mt-1 font-medium">
-                        Kaafi Hospitals Clinical Analytics Portal
+                    <p class="text-[11px] text-slate-300/80 mt-0.5 font-medium">
+                        Kaafi Hospitals Operations &amp; Analytics Portal
                     </p>
                 </div>
 
                 <!-- Error Messages Box -->
                 @if($errors->any())
-                    <div class="mb-5 p-3.5 rounded-2xl bg-rose-500/20 border border-rose-500/40 text-rose-200 text-xs font-semibold flex items-center gap-2.5 backdrop-blur-md">
+                    <div class="mb-4 p-2.5 rounded-xl bg-rose-500/20 border border-rose-500/40 text-rose-200 text-xs font-semibold flex items-center gap-2 backdrop-blur-md">
                         <svg class="w-4 h-4 shrink-0 text-rose-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
                         </svg>
@@ -274,7 +269,7 @@
                 @endif
 
                 @if(session('error'))
-                    <div class="mb-5 p-3.5 rounded-2xl bg-rose-500/20 border border-rose-500/40 text-rose-200 text-xs font-semibold flex items-center gap-2.5 backdrop-blur-md">
+                    <div class="mb-4 p-2.5 rounded-xl bg-rose-500/20 border border-rose-500/40 text-rose-200 text-xs font-semibold flex items-center gap-2 backdrop-blur-md">
                         <svg class="w-4 h-4 shrink-0 text-rose-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
                         </svg>
@@ -282,8 +277,8 @@
                     </div>
                 @endif
 
-                <!-- Credentials Form -->
-                <form action="{{ route('login.post') }}" method="POST" class="space-y-4">
+                <!-- Credentials Form (Registration removed completely) -->
+                <form action="{{ route('login.post') }}" method="POST" class="space-y-3 sm:space-y-3.5">
                     @csrf
 
                     <!-- Username / Email Input Pill with User Icon on Right -->
@@ -295,11 +290,11 @@
                                required 
                                autofocus
                                placeholder="Username"
-                               class="pill-input w-full py-3.5 pl-6 pr-12 rounded-full text-sm font-medium">
+                               class="pill-input w-full py-2.5 sm:py-3 pl-5 pr-11 rounded-full text-xs sm:text-sm font-medium">
                         
-                        <!-- User Silhouette Icon on the Right (exactly like mockup) -->
-                        <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-slate-300/80">
-                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <!-- User Silhouette Icon on Right -->
+                        <div class="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none text-slate-300/80">
+                            <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                             </svg>
                         </div>
@@ -312,78 +307,52 @@
                                id="password" 
                                required 
                                placeholder="Password"
-                               class="pill-input w-full py-3.5 pl-6 pr-12 rounded-full text-sm font-medium">
+                               class="pill-input w-full py-2.5 sm:py-3 pl-5 pr-11 rounded-full text-xs sm:text-sm font-medium">
                         
-                        <!-- Lock Icon on the Right (exactly like mockup) -->
-                        <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-slate-300/80">
-                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <!-- Lock Icon on Right -->
+                        <div class="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none text-slate-300/80">
+                            <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
                             </svg>
                         </div>
                     </div>
 
-                    <!-- Options Row: Remember Me (Left) & Forgot Password? (Right) -->
-                    <div class="flex items-center justify-between px-2 pt-1">
-                        <label class="flex items-center gap-2 cursor-pointer select-none text-xs text-slate-200">
+                    <!-- Options Row: Remember Me (Left) & Forgot Password / Admin Assist (Right) -->
+                    <div class="flex items-center justify-between px-1.5 pt-0.5">
+                        <label class="flex items-center gap-1.5 cursor-pointer select-none text-[11px] sm:text-xs text-slate-200">
                             <input type="checkbox" 
                                    name="remember" 
                                    value="1" 
-                                   class="w-4 h-4 rounded border-white/30 bg-white/10 text-amber-500 focus:ring-0 focus:ring-offset-0 cursor-pointer">
+                                   class="w-3.5 h-3.5 rounded border-white/30 bg-white/10 text-amber-500 focus:ring-0 focus:ring-offset-0 cursor-pointer">
                             <span>Remember me</span>
                         </label>
                         <a href="javascript:void(0)" 
                            @click="fillAdmin()"
-                           class="text-xs text-slate-300 hover:text-white transition font-medium">
+                           class="text-[11px] sm:text-xs text-slate-300 hover:text-white transition font-medium">
                             Forgot password?
                         </a>
                     </div>
 
-                    <!-- Pure White Solid Pill Submit Button (exactly like mockup) -->
-                    <div class="pt-2">
+                    <!-- Pure White Solid Pill Submit Button -->
+                    <div class="pt-1">
                         <button type="submit" 
-                                class="w-full py-3.5 px-6 rounded-full bg-white text-slate-950 font-bold text-sm sm:text-base tracking-wide hover:bg-slate-100 active:scale-[0.99] transition shadow-[0_10px_25px_rgba(0,0,0,0.35)] cursor-pointer flex items-center justify-center">
+                                class="w-full py-2.5 sm:py-3 px-6 rounded-full bg-white text-slate-950 font-bold text-xs sm:text-sm tracking-wide hover:bg-slate-100 active:scale-[0.99] transition shadow-[0_10px_25px_rgba(0,0,0,0.35)] cursor-pointer flex items-center justify-center">
                             Login
-                        </button>
-                    </div>
-
-                    <!-- Bottom Text: Don't have an account? Register / Authorized Access -->
-                    <div class="text-center text-xs text-slate-300/80 pt-3">
-                        <span>Don't have an account?</span> 
-                        <a href="javascript:void(0)" 
-                           @click="showStaffPills = !showStaffPills"
-                           class="font-semibold text-white underline decoration-white/40 hover:decoration-white transition ml-1 cursor-pointer">
-                            Staff Access
-                        </a>
-                    </div>
-
-                    <!-- Discreet Quick-Fill Access Drawer for Staff -->
-                    <div x-show="showStaffPills" 
-                         x-transition.opacity.duration.200ms
-                         class="pt-3 border-t border-white/15 flex flex-wrap items-center justify-center gap-2 text-[11px]">
-                        <button type="button" 
-                                @click="fillAdmin()"
-                                class="px-3 py-1 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 text-slate-200 transition">
-                            Admin (Muse)
-                        </button>
-                        <button type="button" 
-                                @click="fillSuperadmin()"
-                                class="px-3 py-1 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 text-slate-200 transition">
-                            Superadmin
                         </button>
                     </div>
                 </form>
             </div>
 
             <!-- Author & Hospital Credit Caption -->
-            <p class="text-center text-[11px] text-slate-400/80 mt-4 font-medium tracking-wide">
+            <p class="text-center text-[10px] sm:text-[11px] text-slate-400/75 mt-2.5 font-medium tracking-wide">
                 Kaafi Hospitals &bull; Designed &amp; Developed by SEHTECH Healthcare Solutions (Mohammad Sulieman)
             </p>
         </div>
     </main>
 
-    <!-- FOOTER: System & Security Status -->
-    <footer class="relative z-20 w-full px-6 py-3 text-center text-[11px] text-slate-400/60 font-mono">
-        &copy; {{ date('Y') }} Kaafi Hospitals. Protected Healthcare Operations System.
+    <!-- FOOTER: Security Status (Compact, non-scrollable) -->
+    <footer class="relative z-20 w-full px-4 py-2 text-center text-[10px] text-slate-400/50 font-mono shrink-0">
+        &copy; {{ date('Y') }} Kaafi Hospitals. Protected Healthcare System. Authorized Personnel Only.
     </footer>
 
     <!-- ======================================================== -->
@@ -394,17 +363,16 @@
             return {
                 lightOn: true,
                 showHint: true,
-                showStaffPills: false,
 
-                // Rope anchor and coordinates relative to rope SVG (viewBox 0 0 140 220)
+                // Rope anchor and coordinates relative to rope SVG (viewBox 0 0 140 190)
                 anchorX: 20,
                 anchorY: 0,
                 restX: 20,
-                restY: 120,
+                restY: 100,
                 
                 // Current handle position
                 hx: 20,
-                hy: 120,
+                hy: 100,
                 
                 // Physics velocities
                 vx: 0,
@@ -412,8 +380,6 @@
                 
                 // Interaction tracking
                 isDragging: false,
-                dragStartY: 0,
-                dragStartHy: 0,
                 dragStartTime: 0,
                 svgRect: null,
 
@@ -433,8 +399,7 @@
                 // Damped Harmonic Oscillator loop (Runs at 60/120 FPS smoothly)
                 physicsLoop() {
                     if (!this.isDragging) {
-                        // Spring stiffness and damping friction
-                        const k = 0.085;
+                        const k = 0.09;
                         const damping = 0.86;
 
                         const ax = (this.restX - this.hx) * k;
@@ -466,7 +431,6 @@
                     const handle = document.getElementById('rope-handle-group');
                     if (!path || !handle) return;
 
-                    // Calculate natural Catmull/Bézier sag and flex based on displacement & tension
                     const dx = this.hx - this.anchorX;
                     const dy = this.hy - this.anchorY;
 
@@ -505,23 +469,19 @@
                 onCordPointerMove(e) {
                     if (!this.isDragging || !this.svgRect) return;
 
-                    // Convert client mouse/touch to SVG coordinates
                     const scaleX = 140 / this.svgRect.width;
-                    const scaleY = 220 / this.svgRect.height;
+                    const scaleY = 190 / this.svgRect.height;
 
                     const mouseSvgX = (e.clientX - this.svgRect.left) * scaleX;
                     const mouseSvgY = (e.clientY - this.svgRect.top) * scaleY;
 
                     // Clamped physics bounds
-                    // Can swing horizontally between -10 and 60
-                    this.hx = Math.max(-10, Math.min(65, mouseSvgX));
+                    this.hx = Math.max(-10, Math.min(60, mouseSvgX));
                     
-                    // Can pull down from rest (120) up to 200 with soft elastic tension
                     const rawY = mouseSvgY;
-                    if (rawY < this.restY - 20) {
-                        this.hy = this.restY - 20; // Cannot push rope above lamp
+                    if (rawY < this.restY - 15) {
+                        this.hy = this.restY - 15;
                     } else if (rawY > this.restY) {
-                        // Elastic resistance when stretched past rest
                         const stretch = rawY - this.restY;
                         this.hy = this.restY + stretch * 0.85;
                     } else {
@@ -545,13 +505,11 @@
                     const pullDistance = this.hy - this.restY;
                     const duration = Date.now() - this.dragStartTime;
 
-                    // If pulled down past 24px OR quickly clicked:
-                    if (pullDistance > 24 || duration < 250) {
+                    // If pulled down past 20px OR quickly clicked:
+                    if (pullDistance > 20 || duration < 250) {
                         this.toggleLight();
-                        // Give upward elastic spring kick
                         this.vy = -Math.max(14, pullDistance * 0.7);
                     } else {
-                        // Gentle release rebound
                         this.vy = -pullDistance * 0.5;
                     }
                 },
@@ -559,8 +517,7 @@
                 // Programmatic impulse (for button or quick click)
                 triggerPull() {
                     this.showHint = false;
-                    // Apply downward impulse then snap
-                    this.hy = this.restY + 45;
+                    this.hy = this.restY + 40;
                     this.vy = -18;
                     this.toggleLight();
                 },
