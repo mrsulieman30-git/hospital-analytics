@@ -404,10 +404,114 @@ class AnalyticsKpiService
             $findings[] = "Diagnostic intensity stands at {$labIntensity}x tests per patient across all 13 clinical specialties.";
         }
 
+        $departmentSummaries = [
+            'pharmacy' => [
+                'department' => 'Pharmacy',
+                'name' => 'Hospital Pharmacy & Dispensing',
+                'icon' => 'pill',
+                'color' => 'emerald',
+                'status' => $rxFillRate >= 85 ? 'optimal' : ($rxFillRate >= 70 ? 'attention' : 'critical'),
+                'status_badge' => $rxFillRate >= 85 ? 'Optimal Formulary Fill' : ($rxFillRate >= 70 ? 'Stockout Alert' : 'Critical Depletion'),
+                'primary_kpi_label' => 'Prescription Fill Rate',
+                'primary_kpi_value' => "{$rxFillRate}%",
+                'secondary_metric' => number_format($servedRx).' Prescriptions Dispensed',
+                'headline' => $rxFillRate >= 85
+                    ? "Formulary operations operating at optimal throughput ({$rxFillRate}% fill rate)."
+                    : "Formulary constrained at {$rxFillRate}% fill rate with {$stockouts} stockout drop-offs.",
+                'bullet_points' => [
+                    number_format($servedRx).' prescriptions served inside hospital pharmacy.',
+                    number_format($stockouts).' walkout losses directly attributable to out-of-stock items.',
+                    'Net customer credit / insurance exposure: $'.number_format($debtExposure, 2),
+                ],
+                'action_recommendation' => $stockouts > 0
+                    ? 'Audit Action: Replenish out-of-stock formulary lines and review credit recovery.'
+                    : 'Maintain current inventory buffer levels.',
+            ],
+            'emergency' => [
+                'department' => 'Emergency',
+                'name' => 'Emergency Triage & Resuscitation',
+                'icon' => 'zap',
+                'color' => 'amber',
+                'status' => $erMortality < 2 ? 'optimal' : 'critical',
+                'status_badge' => $erMortality < 2 ? 'Stable Triage Flow' : 'High Mortality Flag',
+                'primary_kpi_label' => 'Admission Conversion Yield',
+                'primary_kpi_value' => "{$erYield}%",
+                'secondary_metric' => number_format($erCases).' Acute Triage Cases',
+                'headline' => 'Emergency triaged '.number_format($erCases)." acute presentations with {$erYield}% escalated to inpatient admission.",
+                'bullet_points' => [
+                    number_format($erCases).' total acute presentations received in triage.',
+                    number_format($erAdmitted).' critical cases escalated to Inpatient admission.',
+                    "True in-ER mortality rate: {$erMortality}%.",
+                ],
+                'action_recommendation' => $erYield > 20
+                    ? 'Ensure ward bed availability aligns with high emergency admission velocity.'
+                    : 'Routine acute emergency observation protocols active.',
+            ],
+            'inpatient' => [
+                'department' => 'Inpatient',
+                'name' => 'Inpatient Wards & Maternal Care',
+                'icon' => 'bed',
+                'color' => 'cyan',
+                'status' => ($bor >= 60 && $bor <= 85) ? 'optimal' : ($bor > 85 ? 'surge' : 'headroom'),
+                'status_badge' => $bor > 85 ? 'Bed Surge Alert' : (($bor >= 60) ? 'Optimal Census' : 'Bed Headroom Available'),
+                'primary_kpi_label' => 'Bed Occupancy (BOR)',
+                'primary_kpi_value' => "{$bor}%",
+                'secondary_metric' => "{$activeBeds} Active Licensed Beds",
+                'headline' => "Inpatient wards recorded {$bor}% occupancy with an average length of stay of {$alos} days.",
+                'bullet_points' => [
+                    "Bed Occupancy Rate (BOR): {$bor}% across {$activeBeds} operational beds.",
+                    "Average Length of Stay (ALOS): {$alos} days.",
+                    "Surgical / C-Section rate: {$cSectionRate}% of labor ward deliveries.",
+                ],
+                'action_recommendation' => $bor > 85
+                    ? 'Initiate early morning planned discharges to prevent ER bed boarding.'
+                    : 'Ward capacity sufficient for incoming acute demand.',
+            ],
+            'laboratory' => [
+                'department' => 'Laboratory',
+                'name' => 'Diagnostic Pathology & B2B Referrals',
+                'icon' => 'flask-conical',
+                'color' => 'purple',
+                'status' => 'optimal',
+                'status_badge' => 'High Diagnostic Yield',
+                'primary_kpi_label' => 'Diagnostic Intensity',
+                'primary_kpi_value' => "{$labIntensity}x",
+                'secondary_metric' => number_format($labTests).' Clinical Tests',
+                'headline' => 'Laboratory executed '.number_format($labTests)." diagnostic tests at an intensity of {$labIntensity}x tests per patient.",
+                'bullet_points' => [
+                    number_format($labTests).' tests completed across all 13 specialized benches.',
+                    "Diagnostic intensity ratio: {$labIntensity}x tests per clinical patient.",
+                    "External clinic/hospital B2B referral share: {$labB2b}%.",
+                ],
+                'action_recommendation' => 'Monitor high-volume reagent consumption against stockout downtime.',
+            ],
+            'reception' => [
+                'department' => 'Reception',
+                'name' => 'Outpatient Registration & Physician OPD',
+                'icon' => 'users',
+                'color' => 'indigo',
+                'status' => $docCapture >= 70 ? 'optimal' : 'warning',
+                'status_badge' => $docCapture >= 70 ? 'Healthy Rx Capture' : 'Prescription Leakage',
+                'primary_kpi_label' => 'Doctor Rx Capture',
+                'primary_kpi_value' => "{$docCapture}%",
+                'secondary_metric' => number_format($recFootfall).' Registered Visitors',
+                'headline' => 'Reception processed '.number_format($recFootfall).' visitors and '.number_format($consults)." doctor consultations with {$docCapture}% Rx capture.",
+                'bullet_points' => [
+                    number_format($recFootfall).' outpatient registrations logged.',
+                    number_format($consults).' doctor consultations completed.',
+                    "{$docCapture}% of physician consultations converted to pharmacy dispenses.",
+                ],
+                'action_recommendation' => $docCapture < 70
+                    ? 'Investigate why patients are walking out to street pharmacies without filling prescribed Rx.'
+                    : 'Outpatient flow is well integrated with pharmacy dispensing.',
+            ],
+        ];
+
         return [
             'title' => "Hospital Performance & Clinical Operations Summary ({$filterLabel})",
             'executive_summary' => $summary,
             'key_findings' => $findings,
+            'department_summaries' => $departmentSummaries,
         ];
     }
 

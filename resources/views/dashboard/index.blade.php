@@ -1137,14 +1137,14 @@
         </div>
     </div>
 
-    <!-- 2. Streamlined Governance & 4-Point Audit Bar (Clean & Non-Intrusive) -->
+    <!-- 2. Streamlined Governance & 4-Point Audit Bar (Clean, Interactive & Playbook Guide) -->
     @if($auditResult)
-    <div x-data="{ openAuditModal: false }" class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-4 shadow-xs">
+    <div x-data="{ openAuditModal: false, openPlaybookModal: false }" class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-4 lg:p-5 shadow-xs">
         <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
             
             <!-- Left Status -->
             <div class="flex items-center space-x-3">
-                <div class="w-9 h-9 rounded-xl flex items-center justify-center font-bold {{ $auditResult['overall_status'] === 'verified' ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' : ($auditResult['overall_status'] === 'warning' ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20' : 'bg-rose-500/10 text-rose-500 border border-rose-500/20') }}">
+                <div class="w-10 h-10 rounded-xl flex items-center justify-center font-bold {{ $auditResult['overall_status'] === 'verified' ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' : ($auditResult['overall_status'] === 'warning' ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20' : 'bg-rose-500/10 text-rose-500 border border-rose-500/20') }}">
                     @if($auditResult['overall_status'] === 'verified')
                         <i data-lucide="shield-check" class="w-5 h-5"></i>
                     @elseif($auditResult['overall_status'] === 'warning')
@@ -1159,17 +1159,17 @@
                         <span class="text-sm font-bold text-slate-900 dark:text-white" x-text="$store.app.t('audit_title', '4-Point Cross-Departmental Audit Engine')">
                             4-Point Cross-Departmental Audit Engine
                         </span>
-                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full uppercase {{ $auditResult['overall_status'] === 'verified' ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : ($auditResult['overall_status'] === 'warning' ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400' : 'bg-rose-500/10 text-rose-600 dark:text-rose-400') }}">
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider {{ $auditResult['overall_status'] === 'verified' ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20' : ($auditResult['overall_status'] === 'warning' ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20' : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20') }}">
                             {{ $auditResult['passed_count'] }} of {{ $auditResult['total_checks'] }} Verified
                         </span>
                     </div>
                     <p class="text-xs text-slate-500 dark:text-slate-400">
-                        Cross-reconciliation of Inpatient census, E.R dispositions, OPD doctor prescriptions, and formulary stockouts.
+                        Cross-departmental reconciliation for Inpatient census, E.R triage handovers, Doctor Rx capture, and stockout persistence.
                     </p>
                 </div>
             </div>
 
-            <!-- Middle Quick Badges + Inspect Button -->
+            <!-- Middle Quick Badges + Playbook & Inspect Buttons -->
             <div class="flex flex-wrap items-center gap-2">
                 @php 
                     $c1 = $auditResult['checks']['check_1_inpatient_census'];
@@ -1177,82 +1177,420 @@
                     $c3 = $auditResult['checks']['check_3_doctor_pharmacy_capture'];
                     $c4 = $auditResult['checks']['check_4_stockout_persistence'];
                 @endphp
-                <span class="inline-flex items-center text-[11px] font-medium px-2 py-1 rounded-lg {{ $c1['status'] === 'passed' ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300' : 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300' }}">
+                <span class="inline-flex items-center text-[11px] font-medium px-2 py-1 rounded-lg {{ $c1['status'] === 'passed' ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300' : 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300' }}" title="{{ $c1['formula'] ?? '' }}">
                     <i data-lucide="{{ $c1['status'] === 'passed' ? 'check' : 'x' }}" class="w-3 h-3 mr-1"></i>
-                    Census
+                    1. Census
                 </span>
-                <span class="inline-flex items-center text-[11px] font-medium px-2 py-1 rounded-lg {{ $c2['status'] === 'passed' ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300' : 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300' }}">
+                <span class="inline-flex items-center text-[11px] font-medium px-2 py-1 rounded-lg {{ $c2['status'] === 'passed' ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300' : 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300' }}" title="{{ $c2['formula'] ?? '' }}">
                     <i data-lucide="{{ $c2['status'] === 'passed' ? 'check' : 'x' }}" class="w-3 h-3 mr-1"></i>
-                    ER &rarr; IPD
+                    2. ER &rarr; IPD
                 </span>
-                <span class="inline-flex items-center text-[11px] font-medium px-2 py-1 rounded-lg {{ $c3['status'] === 'passed' ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300' : 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300' }}">
+                <span class="inline-flex items-center text-[11px] font-medium px-2 py-1 rounded-lg {{ $c3['status'] === 'passed' ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300' : 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300' }}" title="{{ $c3['message'] ?? '' }}">
                     <i data-lucide="{{ $c3['status'] === 'passed' ? 'check' : 'alert-circle' }}" class="w-3 h-3 mr-1"></i>
-                    Rx Capture
+                    3. Rx Capture ({{ $c3['overall_capture_rate'] ?? 0 }}%)
                 </span>
-                <span class="inline-flex items-center text-[11px] font-medium px-2 py-1 rounded-lg {{ $c4['status'] === 'passed' ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300' : 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300' }}">
+                <span class="inline-flex items-center text-[11px] font-medium px-2 py-1 rounded-lg {{ $c4['status'] === 'passed' ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300' : 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300' }}" title="{{ $c4['message'] ?? '' }}">
                     <i data-lucide="{{ $c4['status'] === 'passed' ? 'check' : 'alert-circle' }}" class="w-3 h-3 mr-1"></i>
-                    Stockouts
+                    4. Stockouts
                 </span>
 
-                <button @click="openAuditModal = !openAuditModal" 
-                        class="ml-2 inline-flex items-center space-x-1 px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition cursor-pointer">
+                <!-- Playbook Button -->
+                <button @click="openPlaybookModal = true; $nextTick(() => window.lucide && lucide.createIcons())" 
+                        class="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-blue-50 dark:bg-blue-950/50 text-brand-primary dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/50 border border-blue-200 dark:border-blue-800 transition cursor-pointer">
+                    <i data-lucide="book-open" class="w-3.5 h-3.5"></i>
+                    <span>How to Use Audit</span>
+                </button>
+
+                <!-- Inspect Proofs Toggle -->
+                <button @click="openAuditModal = !openAuditModal; $nextTick(() => window.lucide && lucide.createIcons())" 
+                        class="inline-flex items-center space-x-1 px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition cursor-pointer">
                     <i data-lucide="calculator" class="w-3.5 h-3.5 text-brand-primary"></i>
-                    <span x-text="openAuditModal ? 'Hide Formulas' : 'Inspect Proofs'">Inspect Proofs</span>
+                    <span x-text="openAuditModal ? 'Hide Proofs' : 'Inspect Proofs'">Inspect Proofs</span>
                 </button>
             </div>
         </div>
 
         <!-- Collapsible Audit Proof Drawer -->
-        <div x-show="openAuditModal" x-transition class="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 text-xs space-y-1.5">
+        <div x-show="openAuditModal" x-transition class="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 grid grid-cols-1 lg:grid-cols-2 gap-4">
+            
+            <!-- Check 1: Inpatient Bed Census Balance -->
+            <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 text-xs space-y-3">
                 <div class="flex items-center justify-between">
-                    <strong class="text-slate-900 dark:text-white">1. Inpatient Bed Census Balance</strong>
-                    <span class="font-mono text-[10px] uppercase font-bold {{ $c1['status'] === 'passed' ? 'text-emerald-600' : 'text-rose-600' }}">{{ $c1['badge'] }}</span>
-                </div>
-                <div class="p-2 rounded bg-white dark:bg-slate-900 font-mono text-[11px] text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800">
-                    {{ $c1['formula'] ?? 'Admissions + Midnight = Discharges + Deaths + Census' }}
-                </div>
-                <p class="text-slate-500 text-[11px]">{{ $c1['message'] }}</p>
-            </div>
-
-            <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 text-xs space-y-1.5">
-                <div class="flex items-center justify-between">
-                    <strong class="text-slate-900 dark:text-white">2. E.R-to-IPD Admissions</strong>
-                    <span class="font-mono text-[10px] uppercase font-bold {{ $c2['status'] === 'passed' ? 'text-emerald-600' : 'text-rose-600' }}">{{ $c2['badge'] }}</span>
-                </div>
-                <div class="p-2 rounded bg-white dark:bg-slate-900 font-mono text-[11px] text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800">
-                    {{ $c2['formula'] ?? 'ER Direct Disposition == Inpatient ER Admissions' }}
-                </div>
-                <p class="text-slate-500 text-[11px]">{{ $c2['message'] }}</p>
-            </div>
-
-            <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 text-xs space-y-1.5">
-                <div class="flex items-center justify-between">
-                    <strong class="text-slate-900 dark:text-white">3. Doctor Consultation-to-Pharmacy Capture</strong>
-                    <span class="font-mono text-[10px] uppercase font-bold {{ $c3['status'] === 'passed' ? 'text-emerald-600' : 'text-amber-600' }}">{{ $c3['badge'] }}</span>
-                </div>
-                <div class="p-2 rounded bg-white dark:bg-slate-900 font-mono text-[11px] text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800">
-                    {{ $c3['formula'] ?? 'Doctor Consultations vs Pharmacy Prescriptions Dispensed' }}
-                </div>
-                <p class="text-slate-500 text-[11px]">{{ $c3['message'] }}</p>
-            </div>
-
-            <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 text-xs space-y-1.5">
-                <div class="flex items-center justify-between">
-                    <strong class="text-slate-900 dark:text-white">4. Stockout Persistence Tracker</strong>
-                    <span class="font-mono text-[10px] uppercase font-bold {{ $c4['status'] === 'passed' ? 'text-emerald-600' : 'text-amber-600' }}">{{ $c4['badge'] }}</span>
-                </div>
-                <p class="text-slate-500 text-[11px]">{{ $c4['message'] }}</p>
-                @if(!empty($c4['bottlenecks']))
-                    <div class="space-y-1">
-                        @foreach($c4['bottlenecks'] as $bot)
-                            <div class="flex items-center justify-between bg-white dark:bg-slate-900 p-1.5 rounded text-[11px]">
-                                <span class="font-bold text-rose-600">[{{ $bot['department'] }}] {{ $bot['item'] }}</span>
-                                <span class="font-mono text-slate-500">{{ $bot['consecutive_days'] }} Days Nil</span>
-                            </div>
-                        @endforeach
+                    <div class="flex items-center space-x-2">
+                        <span class="w-6 h-6 rounded-lg bg-blue-100 dark:bg-blue-900/50 text-brand-primary dark:text-blue-300 flex items-center justify-center font-bold text-xs">1</span>
+                        <strong class="text-slate-900 dark:text-white text-sm">Inpatient Bed Census Balance</strong>
                     </div>
-                @endif
+                    <span class="font-mono text-[10px] uppercase font-bold px-2 py-0.5 rounded-full {{ $c1['status'] === 'passed' ? 'bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300' : 'bg-rose-100 dark:bg-rose-900/50 text-rose-700 dark:text-rose-300' }}">
+                        {{ $c1['badge'] }}
+                    </span>
+                </div>
+
+                <p class="text-slate-600 dark:text-slate-300 text-xs">
+                    {{ $c1['clinical_objective'] ?? 'Enforce mathematical bed integrity and prevent phantom bed occupancy or unrecorded discharges/deaths.' }}
+                </p>
+
+                <!-- Visual Formula Breakdown Chips -->
+                <div class="p-3 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2">
+                    <div class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Formula Verification</div>
+                    <div class="flex flex-wrap items-center gap-1.5 font-mono text-[11px]">
+                        <span class="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200" title="Previous Midnight Census [A]">
+                            [A] Prev: <strong>{{ $c1['values']['a'] ?? 0 }}</strong>
+                        </span>
+                        <span class="text-slate-400 font-bold">+</span>
+                        <span class="px-2 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300" title="Newly Admitted [B]">
+                            [B] Admits: <strong>{{ $c1['values']['b'] ?? 0 }}</strong>
+                        </span>
+                        <span class="text-slate-400 font-bold">-</span>
+                        <span class="px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300" title="Total Discharged [C]">
+                            [C] Discharges: <strong>{{ $c1['values']['c'] ?? 0 }}</strong>
+                        </span>
+                        <span class="text-slate-400 font-bold">-</span>
+                        <span class="px-2 py-0.5 rounded bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300" title="Referred Out [D]">
+                            [D] Referrals: <strong>{{ $c1['values']['d'] ?? 0 }}</strong>
+                        </span>
+                        <span class="text-slate-400 font-bold">-</span>
+                        <span class="px-2 py-0.5 rounded bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300" title="Deaths Today [E]">
+                            [E] Deaths: <strong>{{ $c1['values']['e'] ?? 0 }}</strong>
+                        </span>
+                        <span class="text-slate-400 font-bold">=</span>
+                        <span class="px-2 py-0.5 rounded font-bold {{ ($c1['status'] === 'passed') ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20' }}">
+                            Expected: <strong>{{ $c1['values']['expectedF'] ?? 0 }}</strong>
+                        </span>
+                        <span class="text-slate-400 font-bold">vs</span>
+                        <span class="px-2 py-0.5 rounded font-bold bg-slate-200 dark:bg-slate-700 text-slate-900 dark:text-white">
+                            Recorded [F]: <strong>{{ $c1['values']['f'] ?? 0 }}</strong>
+                        </span>
+                    </div>
+                </div>
+
+                <div class="flex items-start space-x-2 text-[11px] p-2 rounded-lg {{ $c1['status'] === 'passed' ? 'bg-emerald-50/50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-300' : 'bg-rose-50/50 dark:bg-rose-950/20 text-rose-700 dark:text-rose-300' }}">
+                    <i data-lucide="{{ $c1['status'] === 'passed' ? 'check-circle-2' : 'alert-octagon' }}" class="w-4 h-4 shrink-0 mt-0.5"></i>
+                    <div>
+                        <div class="font-bold">{{ $c1['message'] }}</div>
+                        <div class="text-slate-500 dark:text-slate-400 mt-0.5">{{ $c1['actionable_recommendation'] }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Check 2: E.R-to-IPD Admission Reconciliation -->
+            <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 text-xs space-y-3">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-2">
+                        <span class="w-6 h-6 rounded-lg bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 flex items-center justify-center font-bold text-xs">2</span>
+                        <strong class="text-slate-900 dark:text-white text-sm">E.R-to-IPD Custody Reconciliation</strong>
+                    </div>
+                    <span class="font-mono text-[10px] uppercase font-bold px-2 py-0.5 rounded-full {{ $c2['status'] === 'passed' ? 'bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300' : 'bg-rose-100 dark:bg-rose-900/50 text-rose-700 dark:text-rose-300' }}">
+                        {{ $c2['badge'] }}
+                    </span>
+                </div>
+
+                <p class="text-slate-600 dark:text-slate-300 text-xs">
+                    {{ $c2['clinical_objective'] ?? 'Ensure every acute patient transferred from Emergency Triage is officially admitted in the Ward.' }}
+                </p>
+
+                <!-- Transfer Bridge Diagram -->
+                <div class="p-3 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2">
+                    <div class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Clinical Custody Handover Bridge</div>
+                    <div class="flex items-center justify-between font-mono text-[11px] py-1">
+                        <div class="flex items-center space-x-2">
+                            <span class="px-2 py-1 rounded bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 font-bold">
+                                E.R Dispatched: {{ $c2['values']['er_transferred_to_ipd'] ?? 0 }}
+                            </span>
+                        </div>
+                        <div class="flex items-center space-x-1 text-slate-400">
+                            <span class="text-[10px] uppercase font-semibold">Handover</span>
+                            <i data-lucide="arrow-right" class="w-4 h-4 text-brand-primary"></i>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <span class="px-2 py-1 rounded bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 font-bold">
+                                Ward Received: {{ $c2['values']['ipd_admitted_from_er'] ?? 0 }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-start space-x-2 text-[11px] p-2 rounded-lg {{ $c2['status'] === 'passed' ? 'bg-emerald-50/50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-300' : 'bg-rose-50/50 dark:bg-rose-950/20 text-rose-700 dark:text-rose-300' }}">
+                    <i data-lucide="{{ $c2['status'] === 'passed' ? 'check-circle-2' : 'alert-octagon' }}" class="w-4 h-4 shrink-0 mt-0.5"></i>
+                    <div>
+                        <div class="font-bold">{{ $c2['message'] }}</div>
+                        <div class="text-slate-500 dark:text-slate-400 mt-0.5">{{ $c2['actionable_recommendation'] }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Check 3: Doctor Consultation-to-Pharmacy Capture -->
+            <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 text-xs space-y-3">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-2">
+                        <span class="w-6 h-6 rounded-lg bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 flex items-center justify-center font-bold text-xs">3</span>
+                        <strong class="text-slate-900 dark:text-white text-sm">Doctor Consultation-to-Pharmacy Capture</strong>
+                    </div>
+                    <span class="font-mono text-[10px] uppercase font-bold px-2 py-0.5 rounded-full {{ $c3['status'] === 'passed' ? 'bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300' : 'bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300' }}">
+                        {{ $c3['badge'] }}
+                    </span>
+                </div>
+
+                <p class="text-slate-600 dark:text-slate-300 text-xs">
+                    {{ $c3['clinical_objective'] ?? 'Identify prescription leakage ("Pharmacy lama iman") where patients take hospital doctor prescriptions to external street pharmacies.' }}
+                </p>
+
+                <!-- Metric highlights & Drop-off counter -->
+                <div class="p-3 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Prescription Capture & Walkout Monitor</span>
+                        <span class="text-[11px] font-bold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/50 px-2 py-0.5 rounded">
+                            Pharmacy lama iman: {{ $c3['drop_off_count'] ?? 0 }} patients
+                        </span>
+                    </div>
+
+                    <!-- Capture Progress Bar -->
+                    <div class="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2 overflow-hidden">
+                        <div class="h-2 rounded-full {{ ($c3['overall_capture_rate'] ?? 0) >= 70 ? 'bg-emerald-500' : 'bg-amber-500' }}" 
+                             style="width: {{ min(100, $c3['overall_capture_rate'] ?? 0) }}%"></div>
+                    </div>
+
+                    <!-- Doctors Breakdown if available -->
+                    @if(!empty($c3['doctors']))
+                        <div class="space-y-1.5 pt-1 max-h-36 overflow-y-auto">
+                            @foreach($c3['doctors'] as $doc)
+                                <div class="flex items-center justify-between text-[11px] p-1.5 rounded bg-slate-50 dark:bg-slate-800">
+                                    <span class="font-semibold text-slate-800 dark:text-slate-200">{{ $doc['doctor'] }}</span>
+                                    <div class="flex items-center space-x-2">
+                                        <span class="text-slate-500">{{ $doc['served_rx'] }}/{{ $doc['consultations'] }} Rx</span>
+                                        <span class="font-mono font-bold {{ $doc['capture_rate'] >= 70 ? 'text-emerald-600' : 'text-amber-600' }}">
+                                            {{ $doc['capture_rate'] }}%
+                                        </span>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    @endif
+                </div>
+
+                <div class="flex items-start space-x-2 text-[11px] p-2 rounded-lg {{ $c3['status'] === 'passed' ? 'bg-emerald-50/50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-300' : 'bg-amber-50/50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-300' }}">
+                    <i data-lucide="{{ $c3['status'] === 'passed' ? 'check-circle-2' : 'alert-circle' }}" class="w-4 h-4 shrink-0 mt-0.5"></i>
+                    <div>
+                        <div class="font-bold">{{ $c3['message'] }}</div>
+                        <div class="text-slate-500 dark:text-slate-400 mt-0.5">{{ $c3['actionable_recommendation'] }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Check 4: Stockout Persistence & Downtime Tracker -->
+            <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 text-xs space-y-3">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-2">
+                        <span class="w-6 h-6 rounded-lg bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 flex items-center justify-center font-bold text-xs">4</span>
+                        <strong class="text-slate-900 dark:text-white text-sm">Stockout Persistence & Downtime Tracker</strong>
+                    </div>
+                    <span class="font-mono text-[10px] uppercase font-bold px-2 py-0.5 rounded-full {{ $c4['status'] === 'passed' ? 'bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300' : 'bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300' }}">
+                        {{ $c4['badge'] }}
+                    </span>
+                </div>
+
+                <p class="text-slate-600 dark:text-slate-300 text-xs">
+                    {{ $c4['clinical_objective'] ?? 'Identify chronic medication and laboratory reagent outages (3+ days) to stop clinical service downtime.' }}
+                </p>
+
+                <!-- Rolling 7-day Stockout Monitor -->
+                <div class="p-3 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">7-Day Supply Chain Downtime Radar</span>
+                        <span class="text-[10px] text-slate-400 font-mono">Window: Past 7 Days</span>
+                    </div>
+
+                    @if(empty($c4['bottlenecks']))
+                        <div class="flex items-center space-x-2 text-[11px] text-emerald-600 dark:text-emerald-400 py-2">
+                            <i data-lucide="check-circle" class="w-4 h-4"></i>
+                            <span>Clean supply chain: No item has been missing for 3+ consecutive days.</span>
+                        </div>
+                    @else
+                        <div class="space-y-1.5 max-h-36 overflow-y-auto">
+                            @foreach($c4['bottlenecks'] as $bot)
+                                <div class="flex items-center justify-between text-[11px] p-2 rounded bg-rose-50/60 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/50">
+                                    <div class="flex items-center space-x-2">
+                                        <span class="font-bold text-[10px] px-1.5 py-0.5 rounded bg-rose-200 dark:bg-rose-900 text-rose-800 dark:text-rose-200 uppercase">
+                                            {{ $bot['department'] }}
+                                        </span>
+                                        <span class="font-bold text-slate-800 dark:text-slate-100">{{ $bot['item'] }}</span>
+                                    </div>
+                                    <span class="font-mono font-bold text-rose-600 dark:text-rose-400">
+                                        {{ $bot['consecutive_days'] }} Days Nil ({{ strtoupper($bot['severity']) }})
+                                    </span>
+                                </div>
+                            @endforeach
+                        </div>
+                    @endif
+                </div>
+
+                <div class="flex items-start space-x-2 text-[11px] p-2 rounded-lg {{ $c4['status'] === 'passed' ? 'bg-emerald-50/50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-300' : 'bg-amber-50/50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-300' }}">
+                    <i data-lucide="{{ $c4['status'] === 'passed' ? 'check-circle-2' : 'alert-circle' }}" class="w-4 h-4 shrink-0 mt-0.5"></i>
+                    <div>
+                        <div class="font-bold">{{ $c4['message'] }}</div>
+                        <div class="text-slate-500 dark:text-slate-400 mt-0.5">{{ $c4['actionable_recommendation'] }}</div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- 📖 Audit Playbook Modal (How to Use & Executive Protocol) -->
+        <div x-show="openPlaybookModal" 
+             x-transition:enter="transition ease-out duration-200" 
+             x-transition:enter-start="opacity-0" 
+             x-transition:enter-end="opacity-100" 
+             x-transition:leave="transition ease-in duration-150" 
+             x-transition:leave-start="opacity-100" 
+             x-transition:leave-end="opacity-0"
+             @keydown.escape.window="openPlaybookModal = false" 
+             class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm"
+             style="display: none;">
+            
+            <div @click.away="openPlaybookModal = false" 
+                 class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden">
+                
+                <!-- Modal Header -->
+                <div class="p-5 lg:p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/50">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 rounded-2xl bg-brand-primary text-white flex items-center justify-center font-bold shadow-md shadow-brand-primary/20">
+                            <i data-lucide="shield-check" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-base lg:text-lg font-bold text-slate-900 dark:text-white">
+                                4-Point Cross-Departmental Audit Engine — Leadership Playbook
+                            </h3>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">
+                                How hospital directors, administrators, and clinical chiefs use automated reconciliation to stop clinical risk and revenue leakage.
+                            </p>
+                        </div>
+                    </div>
+                    <button @click="openPlaybookModal = false" class="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+
+                <!-- Modal Content Scrollable -->
+                <div class="p-6 overflow-y-auto space-y-6 text-slate-700 dark:text-slate-300 text-xs sm:text-sm">
+                    
+                    <!-- Why Cross-Departmental Auditing Matters -->
+                    <div class="p-4 rounded-2xl bg-blue-50/70 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900/50 space-y-2">
+                        <div class="flex items-center space-x-2 text-brand-primary dark:text-blue-300 font-bold text-sm">
+                            <i data-lucide="info" class="w-4 h-4"></i>
+                            <span>Why This Audit Exists & What Problem It Solves</span>
+                        </div>
+                        <p class="text-slate-600 dark:text-slate-300 leading-relaxed text-xs">
+                            In traditional hospital workflows, each department (Inpatient, Emergency, Pharmacy, Reception, Laboratory) logs its own numbers in silos. Without cross-departmental auditing, errors go unnoticed: <strong>ward beds are recorded inaccurately, emergency patients transferred to wards go unlogged, patients walk out with prescriptions to outside street pharmacies ("Pharmacy lama iman"), and chronic drug stockouts paralyze care</strong>. This engine runs automatically every day to cross-reconcile all 5 departments with mathematical proof.
+                        </p>
+                    </div>
+
+                    <!-- The 4 Core Checks Detailed -->
+                    <div class="space-y-4">
+                        <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400">Detailed Check Breakdown & Leadership Protocols</h4>
+
+                        <!-- Check 1 -->
+                        <div class="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-2 bg-white dark:bg-slate-900/50">
+                            <div class="flex items-center justify-between">
+                                <span class="font-bold text-sm text-slate-900 dark:text-white flex items-center space-x-2">
+                                    <span class="w-5 h-5 rounded-md bg-blue-500/10 text-brand-primary flex items-center justify-center text-xs">1</span>
+                                    <span>Check 1: Inpatient Bed Census Balance (The Bed Equation)</span>
+                                </span>
+                                <span class="font-mono text-[10px] px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 font-bold">Formula Proof</span>
+                            </div>
+                            <div class="font-mono text-xs p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800 text-brand-primary dark:text-blue-300">
+                                [A: Prev Midnight] + [B: Admissions] - [C: Discharges] - [D: Referrals] - [E: Deaths] == [F: Ending Census]
+                            </div>
+                            <p class="text-xs text-slate-600 dark:text-slate-300">
+                                <strong>Why it matters:</strong> This is the universal law of hospital bed census. If the formula does not equal [F], it indicates unrecorded patient discharges, phantom admissions, or missed death documentation.
+                            </p>
+                            <div class="text-xs text-brand-primary dark:text-blue-300 font-medium">
+                                <strong>Director Action:</strong> If this check fails, immediately request the ward midnight headcount sheet and match it against the nursing discharge clearance slips.
+                            </div>
+                        </div>
+
+                        <!-- Check 2 -->
+                        <div class="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-2 bg-white dark:bg-slate-900/50">
+                            <div class="flex items-center justify-between">
+                                <span class="font-bold text-sm text-slate-900 dark:text-white flex items-center space-x-2">
+                                    <span class="w-5 h-5 rounded-md bg-amber-500/10 text-amber-600 flex items-center justify-center text-xs">2</span>
+                                    <span>Check 2: E.R-to-IPD Custody Reconciliation (Patient Transit Safety)</span>
+                                </span>
+                                <span class="font-mono text-[10px] px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 font-bold">Transfer Proof</span>
+                            </div>
+                            <div class="font-mono text-xs p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800 text-amber-700 dark:text-amber-300">
+                                Emergency Form [Disposition: Admitted to IPD] == Inpatient Form [Admitted from E.R]
+                            </div>
+                            <p class="text-xs text-slate-600 dark:text-slate-300">
+                                <strong>Why it matters:</strong> Patient handover between Emergency and Wards is a high-risk clinical zone. If E.R sends 5 patients to Inpatient, but the Ward only records 4 admissions from E.R, a patient was either lost in transit, left against medical advice (AMA), or the receiving nurse omitted their file.
+                            </p>
+                            <div class="text-xs text-amber-700 dark:text-amber-300 font-medium">
+                                <strong>Director Action:</strong> Compare the E.R triage transfer register with the Ward admission register to trace the unlogged patient immediately.
+                            </div>
+                        </div>
+
+                        <!-- Check 3 -->
+                        <div class="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-2 bg-white dark:bg-slate-900/50">
+                            <div class="flex items-center justify-between">
+                                <span class="font-bold text-sm text-slate-900 dark:text-white flex items-center space-x-2">
+                                    <span class="w-5 h-5 rounded-md bg-emerald-500/10 text-emerald-600 flex items-center justify-center text-xs">3</span>
+                                    <span>Check 3: Doctor Consultation-to-Pharmacy Capture & "Pharmacy lama iman"</span>
+                                </span>
+                                <span class="font-mono text-[10px] px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 font-bold">Revenue Leakage</span>
+                            </div>
+                            <div class="font-mono text-xs p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800 text-emerald-700 dark:text-emerald-300">
+                                Outpatient Doctor Consultations vs Hospital Pharmacy Prescriptions Dispensed
+                            </div>
+                            <p class="text-xs text-slate-600 dark:text-slate-300">
+                                <strong>Why it matters:</strong> Pharmacy sales are the primary revenue engine for hospital operations. When doctors write prescriptions and patients do not present them to the hospital pharmacy—flagged as <strong>"Pharmacy lama iman"</strong> (Did not present / left hospital)—they buy the drugs from outside street pharmacies. This reveals out-of-stock formulary lines, price uncompetitiveness, or prescriber leakages.
+                            </p>
+                            <div class="text-xs text-emerald-700 dark:text-emerald-300 font-medium">
+                                <strong>Director Action:</strong> Identify which doctor has low capture (< 70%). Check whether the doctor prescribed non-formulary medications or if the patient walked out due to prices.
+                            </div>
+                        </div>
+
+                        <!-- Check 4 -->
+                        <div class="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-2 bg-white dark:bg-slate-900/50">
+                            <div class="flex items-center justify-between">
+                                <span class="font-bold text-sm text-slate-900 dark:text-white flex items-center space-x-2">
+                                    <span class="w-5 h-5 rounded-md bg-purple-500/10 text-purple-600 flex items-center justify-center text-xs">4</span>
+                                    <span>Check 4: Stockout Persistence Radar (7-Day Downtime Tracker)</span>
+                                </span>
+                                <span class="font-mono text-[10px] px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 font-bold">Supply Chain</span>
+                            </div>
+                            <div class="font-mono text-xs p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800 text-purple-700 dark:text-purple-300">
+                                Rolling 7-day scan of Pharmacy Out-of-Stock drugs & Laboratory Nil Reagents (&ge; 3 days = Alert)
+                            </div>
+                            <p class="text-xs text-slate-600 dark:text-slate-300">
+                                <strong>Why it matters:</strong> A 1-day stockout is a delivery delay. A 3-to-5 day stockout of essential antibiotics, IV fluids, or lab reagents causes clinical service shutdown, drives patients away, and reduces hospital revenue.
+                            </p>
+                            <div class="text-xs text-purple-700 dark:text-purple-300 font-medium">
+                                <strong>Director Action:</strong> Direct the hospital procurement officer and finance team to issue emergency local purchase orders for any item flagged with 3+ days nil.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Daily 3-Minute Routine for CEO / Medical Director -->
+                    <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 space-y-2">
+                        <div class="font-bold text-sm text-slate-900 dark:text-white flex items-center space-x-2">
+                            <i data-lucide="check-square" class="w-4 h-4 text-brand-primary"></i>
+                            <span>The 3-Minute Daily Morning Leadership Checklist</span>
+                        </div>
+                        <ol class="list-decimal list-inside space-y-1 text-xs text-slate-600 dark:text-slate-300">
+                            <li><strong>Look at the Top Audit Bar:</strong> Are all 4 checks marked with green checkmarks? If yes, day-close data is mathematically verified.</li>
+                            <li><strong>If Check 1 or 2 Fails:</strong> Intervene immediately before shift changes. Resolve bed and emergency transfer variances.</li>
+                            <li><strong>Check "Pharmacy lama iman":</strong> Review unpresented prescription drop-offs to prevent patient revenue loss.</li>
+                            <li><strong>Check Stockout Radar:</strong> Issue purchase orders for any drug or reagent missing for 3 or more days.</li>
+                        </ol>
+                    </div>
+
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="p-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end bg-slate-50/50 dark:bg-slate-800/50">
+                    <button @click="openPlaybookModal = false" class="px-5 py-2 rounded-xl bg-brand-primary text-white text-xs font-bold hover:bg-slate-900 transition shadow-xs cursor-pointer">
+                        Understood & Close Playbook
+                    </button>
+                </div>
+
             </div>
         </div>
     </div>
@@ -2050,70 +2388,636 @@
         </div>
     </div>
 
-    <!-- 6. Executive Daily Brief & Clinical Alerts -->
-    <div x-data="{ expanded: false }" class="bg-gradient-to-br from-slate-900 to-[#124E78] text-white p-5 lg:p-6 rounded-2xl shadow-md space-y-4">
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-slate-700/80 pb-3">
+    <!-- 6. Executive Daily Brief & Clinical Operations Summary (Interactive, Multi-Color & Multi-View) -->
+    <div x-data="{
+        viewMode: 'cards', // 'cards' | 'matrix' | 'memo'
+        activeDept: 'all',  // 'all' | 'pharmacy' | 'emergency' | 'inpatient' | 'laboratory' | 'reception' | 'alerts'
+        copied: false,
+        copyLeadershipBrief() {
+            const el = document.getElementById('leadershipBriefExportText');
+            const text = el ? el.innerText.trim() : '';
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(() => {
+                    this.copied = true;
+                    setTimeout(() => this.copied = false, 3000);
+                });
+            }
+        }
+    }" class="bg-gradient-to-br from-slate-900 via-slate-850 to-[#0e3b5d] text-white p-5 lg:p-6 rounded-3xl shadow-xl space-y-6 border border-slate-700/60">
+        
+        <!-- Header with Title, Mode Switcher & Copy Brief -->
+        <div class="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4 border-b border-slate-700/80 pb-4">
             <div class="flex items-center space-x-3">
-                <div class="p-2 rounded-xl bg-white/10 backdrop-blur-md">
-                    <i data-lucide="sparkles" class="w-4 h-4 text-blue-300"></i>
+                <div class="w-10 h-10 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center shadow-inner">
+                    <i data-lucide="sparkles" class="w-5 h-5 text-blue-300"></i>
                 </div>
                 <div>
-                    <h3 class="text-base font-bold tracking-tight">
+                    <h3 class="text-base lg:text-lg font-bold tracking-tight text-white">
                         {{ $officialInsight->title ?? ($dynamicExecutiveSummary['title'] ?? 'Hospital Performance & Clinical Operations Summary') }}
                     </h3>
                     <p class="text-xs text-slate-300">
-                        {{ $officialInsight ? 'Official Boardroom Synthesis' : 'Real-Time Operational Intelligence Synthesis' }}
+                        {{ $officialInsight ? 'Official Boardroom Synthesis (AI Validated)' : 'Real-Time Operational Intelligence Synthesis' }} &bull; Period: {{ $startDate }} to {{ $endDate }}
                     </p>
                 </div>
             </div>
 
-            <div class="flex items-center space-x-2">
+            <!-- Action Controls: Mode Switcher & Action Buttons -->
+            <div class="flex flex-wrap items-center gap-2">
+                
+                <!-- View Mode Segmented Switcher -->
+                <div class="inline-flex items-center p-1 rounded-xl bg-slate-800/80 border border-slate-700/80 text-xs font-semibold">
+                    <button @click="viewMode = 'cards'; $nextTick(() => window.lucide && lucide.createIcons())" 
+                            :class="viewMode === 'cards' ? 'bg-brand-primary text-white shadow-xs' : 'text-slate-300 hover:text-white'"
+                            class="px-3 py-1 rounded-lg transition cursor-pointer flex items-center space-x-1">
+                        <i data-lucide="layout-grid" class="w-3.5 h-3.5"></i>
+                        <span>Visual Cards</span>
+                    </button>
+                    <button @click="viewMode = 'matrix'; $nextTick(() => window.lucide && lucide.createIcons())" 
+                            :class="viewMode === 'matrix' ? 'bg-brand-primary text-white shadow-xs' : 'text-slate-300 hover:text-white'"
+                            class="px-3 py-1 rounded-lg transition cursor-pointer flex items-center space-x-1">
+                        <i data-lucide="table" class="w-3.5 h-3.5"></i>
+                        <span>Department Matrix</span>
+                    </button>
+                    <button @click="viewMode = 'memo'; $nextTick(() => window.lucide && lucide.createIcons())" 
+                            :class="viewMode === 'memo' ? 'bg-brand-primary text-white shadow-xs' : 'text-slate-300 hover:text-white'"
+                            class="px-3 py-1 rounded-lg transition cursor-pointer flex items-center space-x-1">
+                        <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
+                        <span>Executive Memo</span>
+                    </button>
+                </div>
+
+                <!-- Copy Brief Button with dynamic feedback -->
+                <button @click="copyLeadershipBrief()" 
+                        class="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-xs cursor-pointer"
+                        :class="copied ? 'bg-emerald-500 text-white' : 'bg-white/10 hover:bg-white/20 text-slate-100 border border-white/15'">
+                    <i :data-lucide="copied ? 'check' : 'copy'" class="w-3.5 h-3.5"></i>
+                    <span x-text="copied ? 'Copied to Clipboard!' : 'Copy Brief'">Copy Brief</span>
+                </button>
+
                 @if(auth()->user() && auth()->user()->isStealthSuperAdmin())
                     <a href="{{ route('superadmin.deepseek.index', ['date' => $targetAuditDate]) }}" 
-                       class="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-white text-slate-900 hover:bg-slate-100 transition shadow-xs">
-                        <i data-lucide="cpu" class="w-3 h-3 text-purple-600"></i>
+                       class="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-purple-600 hover:bg-purple-700 text-white transition shadow-xs">
+                        <i data-lucide="cpu" class="w-3.5 h-3.5"></i>
                         <span>AI Console</span>
                     </a>
                 @endif
-                <button @click="expanded = !expanded" class="px-2.5 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-xs font-medium text-slate-200 transition cursor-pointer">
-                    <span x-text="expanded ? 'Compact' : 'Expand Details'"></span>
-                </button>
             </div>
         </div>
 
-        <p class="text-xs sm:text-sm text-slate-200 leading-relaxed font-normal">
-            {{ $officialInsight->executive_summary ?? ($dynamicExecutiveSummary['executive_summary'] ?? 'Clinical operations across the departments showed steady throughput.') }}
-        </p>
+        <!-- Multi-Color Snapshot KPI Progress Pills -->
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+            
+            <!-- Pharmacy Pill -->
+            <div class="p-3 rounded-2xl bg-emerald-950/40 border border-emerald-500/30 text-white space-y-1.5">
+                <div class="flex items-center justify-between text-emerald-400 text-[11px] font-bold uppercase tracking-wider">
+                    <span class="flex items-center space-x-1">
+                        <i data-lucide="pill" class="w-3.5 h-3.5"></i>
+                        <span>Pharmacy</span>
+                    </span>
+                    <span class="font-mono text-xs">{{ $metrics['pharmacy']['prescription_fill_rate'] }}%</span>
+                </div>
+                <div class="w-full bg-emerald-950 rounded-full h-1.5 overflow-hidden">
+                    <div class="h-1.5 rounded-full bg-emerald-400" style="width: {{ min(100, $metrics['pharmacy']['prescription_fill_rate']) }}%"></div>
+                </div>
+                <div class="text-[10px] text-emerald-200/80 flex items-center justify-between">
+                    <span>{{ number_format($metrics['pharmacy']['total_served_rx']) }} Served</span>
+                    <span class="{{ $metrics['pharmacy']['prescription_fill_rate'] >= 85 ? 'text-emerald-400' : 'text-amber-300 font-bold' }}">
+                        {{ $metrics['pharmacy']['prescription_fill_rate'] >= 85 ? 'Optimal' : 'Stockout Alert' }}
+                    </span>
+                </div>
+            </div>
 
-        <!-- Key Findings & Smart Alerts -->
-        <div x-show="expanded" x-transition class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 pt-2">
-            @php
-                $activeFindings = ($officialInsight && !empty($officialInsight->key_findings))
-                    ? $officialInsight->key_findings
-                    : ($dynamicExecutiveSummary['key_findings'] ?? []);
-            @endphp
-            @if(!empty($activeFindings))
-                @foreach($activeFindings as $find)
-                    <div class="p-3 rounded-xl bg-white/5 border border-white/10 text-xs space-y-1">
-                        <div class="flex items-center space-x-1.5 text-blue-300 font-bold">
-                            <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-emerald-400"></i>
-                            <span>Clinical Finding</span>
+            <!-- Inpatient Pill -->
+            <div class="p-3 rounded-2xl bg-cyan-950/40 border border-cyan-500/30 text-white space-y-1.5">
+                <div class="flex items-center justify-between text-cyan-400 text-[11px] font-bold uppercase tracking-wider">
+                    <span class="flex items-center space-x-1">
+                        <i data-lucide="bed" class="w-3.5 h-3.5"></i>
+                        <span>Inpatient</span>
+                    </span>
+                    <span class="font-mono text-xs">{{ $metrics['inpatient']['bed_occupancy_rate'] }}% BOR</span>
+                </div>
+                <div class="w-full bg-cyan-950 rounded-full h-1.5 overflow-hidden">
+                    <div class="h-1.5 rounded-full bg-cyan-400" style="width: {{ min(100, $metrics['inpatient']['bed_occupancy_rate']) }}%"></div>
+                </div>
+                <div class="text-[10px] text-cyan-200/80 flex items-center justify-between">
+                    <span>{{ $metrics['inpatient']['active_beds'] }} Operational Beds</span>
+                    <span>ALOS: {{ $metrics['inpatient']['average_length_of_stay'] }}d</span>
+                </div>
+            </div>
+
+            <!-- Emergency Pill -->
+            <div class="p-3 rounded-2xl bg-amber-950/40 border border-amber-500/30 text-white space-y-1.5">
+                <div class="flex items-center justify-between text-amber-400 text-[11px] font-bold uppercase tracking-wider">
+                    <span class="flex items-center space-x-1">
+                        <i data-lucide="zap" class="w-3.5 h-3.5"></i>
+                        <span>Emergency</span>
+                    </span>
+                    <span class="font-mono text-xs">{{ $metrics['emergency']['conversion_rate_percent'] }}% Yield</span>
+                </div>
+                <div class="w-full bg-amber-950 rounded-full h-1.5 overflow-hidden">
+                    <div class="h-1.5 rounded-full bg-amber-400" style="width: {{ min(100, $metrics['emergency']['conversion_rate_percent']) }}%"></div>
+                </div>
+                <div class="text-[10px] text-amber-200/80 flex items-center justify-between">
+                    <span>{{ number_format($metrics['emergency']['admitted_to_ipd']) }} IPD Transfers</span>
+                    <span>{{ number_format($metrics['emergency']['total_er_cases']) }} Cases</span>
+                </div>
+            </div>
+
+            <!-- Laboratory Pill -->
+            <div class="p-3 rounded-2xl bg-purple-950/40 border border-purple-500/30 text-white space-y-1.5">
+                <div class="flex items-center justify-between text-purple-400 text-[11px] font-bold uppercase tracking-wider">
+                    <span class="flex items-center space-x-1">
+                        <i data-lucide="flask-conical" class="w-3.5 h-3.5"></i>
+                        <span>Laboratory</span>
+                    </span>
+                    <span class="font-mono text-xs">{{ $metrics['laboratory']['tests_per_patient_ratio'] }}x Ratio</span>
+                </div>
+                <div class="w-full bg-purple-950 rounded-full h-1.5 overflow-hidden">
+                    <div class="h-1.5 rounded-full bg-purple-400" style="width: {{ min(100, ($metrics['laboratory']['tests_per_patient_ratio'] / 4) * 100) }}%"></div>
+                </div>
+                <div class="text-[10px] text-purple-200/80 flex items-center justify-between">
+                    <span>{{ number_format($metrics['laboratory']['total_tests']) }} Tests Done</span>
+                    <span>B2B: {{ $metrics['laboratory']['b2b_partner_share_percent'] }}%</span>
+                </div>
+            </div>
+
+            <!-- Outpatient / Alerts Pill -->
+            <div class="p-3 rounded-2xl bg-rose-950/40 border border-rose-500/30 text-white space-y-1.5 col-span-2 sm:col-span-1">
+                <div class="flex items-center justify-between text-rose-400 text-[11px] font-bold uppercase tracking-wider">
+                    <span class="flex items-center space-x-1">
+                        <i data-lucide="shield-alert" class="w-3.5 h-3.5"></i>
+                        <span>Clinical Risks</span>
+                    </span>
+                    <span class="font-mono text-xs font-bold">{{ count($metrics['smart_alerts']) }} Active</span>
+                </div>
+                <div class="w-full bg-rose-950 rounded-full h-1.5 overflow-hidden">
+                    <div class="h-1.5 rounded-full {{ count($metrics['smart_alerts']) === 0 ? 'bg-emerald-400' : 'bg-rose-400' }}" style="width: {{ count($metrics['smart_alerts']) === 0 ? 100 : min(100, count($metrics['smart_alerts']) * 25) }}%"></div>
+                </div>
+                <div class="text-[10px] text-rose-200/80 flex items-center justify-between">
+                    <span>{{ count($metrics['smart_alerts']) === 0 ? 'No Critical Flags' : count($metrics['smart_alerts']).' Items Need Review' }}</span>
+                    <span>OPD: {{ $metrics['reception']['doctor_capture_rate'] }}%</span>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ───────────────────────────────────────────────────────────── -->
+        <!-- VIEW 1: Visual Department Intelligence Cards (Interactive)   -->
+        <!-- ───────────────────────────────────────────────────────────── -->
+        <div x-show="viewMode === 'cards'" x-transition class="space-y-4">
+            
+            <!-- Category Filter Pills -->
+            <div class="flex flex-wrap items-center gap-2 pt-1 border-t border-slate-700/60">
+                <button @click="activeDept = 'all'" 
+                        :class="activeDept === 'all' ? 'bg-white text-slate-900 font-bold' : 'bg-white/10 text-slate-300 hover:bg-white/20'"
+                        class="px-3 py-1 rounded-xl text-xs transition cursor-pointer">
+                    ✨ All Intelligence
+                </button>
+                <button @click="activeDept = 'pharmacy'" 
+                        :class="activeDept === 'pharmacy' ? 'bg-emerald-500 text-white font-bold' : 'bg-white/10 text-slate-300 hover:bg-white/20'"
+                        class="px-3 py-1 rounded-xl text-xs transition cursor-pointer flex items-center space-x-1">
+                    <i data-lucide="pill" class="w-3 h-3"></i>
+                    <span>Pharmacy</span>
+                </button>
+                <button @click="activeDept = 'emergency'" 
+                        :class="activeDept === 'emergency' ? 'bg-amber-500 text-white font-bold' : 'bg-white/10 text-slate-300 hover:bg-white/20'"
+                        class="px-3 py-1 rounded-xl text-xs transition cursor-pointer flex items-center space-x-1">
+                    <i data-lucide="zap" class="w-3 h-3"></i>
+                    <span>Emergency</span>
+                </button>
+                <button @click="activeDept = 'inpatient'" 
+                        :class="activeDept === 'inpatient' ? 'bg-cyan-500 text-white font-bold' : 'bg-white/10 text-slate-300 hover:bg-white/20'"
+                        class="px-3 py-1 rounded-xl text-xs transition cursor-pointer flex items-center space-x-1">
+                    <i data-lucide="bed" class="w-3 h-3"></i>
+                    <span>Inpatient</span>
+                </button>
+                <button @click="activeDept = 'laboratory'" 
+                        :class="activeDept === 'laboratory' ? 'bg-purple-500 text-white font-bold' : 'bg-white/10 text-slate-300 hover:bg-white/20'"
+                        class="px-3 py-1 rounded-xl text-xs transition cursor-pointer flex items-center space-x-1">
+                    <i data-lucide="flask-conical" class="w-3 h-3"></i>
+                    <span>Laboratory</span>
+                </button>
+                <button @click="activeDept = 'reception'" 
+                        :class="activeDept === 'reception' ? 'bg-indigo-500 text-white font-bold' : 'bg-white/10 text-slate-300 hover:bg-white/20'"
+                        class="px-3 py-1 rounded-xl text-xs transition cursor-pointer flex items-center space-x-1">
+                    <i data-lucide="users" class="w-3 h-3"></i>
+                    <span>Reception / OPD</span>
+                </button>
+                <button @click="activeDept = 'alerts'" 
+                        :class="activeDept === 'alerts' ? 'bg-rose-500 text-white font-bold' : 'bg-white/10 text-slate-300 hover:bg-white/20'"
+                        class="px-3 py-1 rounded-xl text-xs transition cursor-pointer flex items-center space-x-1">
+                    <i data-lucide="alert-octagon" class="w-3 h-3"></i>
+                    <span>Risk Flags ({{ count($metrics['smart_alerts']) }})</span>
+                </button>
+            </div>
+
+            <!-- Cards Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                
+                @php
+                    $deptSummaries = $dynamicExecutiveSummary['department_summaries'] ?? [];
+                @endphp
+
+                <!-- 1. Pharmacy Card -->
+                @if(isset($deptSummaries['pharmacy']))
+                @php $phm = $deptSummaries['pharmacy']; @endphp
+                <div x-show="activeDept === 'all' || activeDept === 'pharmacy'" x-transition 
+                     class="p-4 rounded-2xl bg-white/5 border border-emerald-500/30 hover:border-emerald-500/50 transition space-y-3">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-2 text-emerald-300 font-bold">
+                            <div class="p-1.5 rounded-lg bg-emerald-500/20 text-emerald-400">
+                                <i data-lucide="pill" class="w-4 h-4"></i>
+                            </div>
+                            <span class="text-sm text-white">{{ $phm['name'] }}</span>
                         </div>
-                        <p class="text-slate-300 leading-normal">{{ $find }}</p>
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full {{ $phm['status'] === 'optimal' ? 'bg-emerald-500/20 text-emerald-300' : 'bg-amber-500/20 text-amber-300' }}">
+                            {{ $phm['status_badge'] }}
+                        </span>
+                    </div>
+
+                    <div class="flex items-baseline justify-between pt-1">
+                        <div>
+                            <span class="text-2xl font-black text-white">{{ $phm['primary_kpi_value'] }}</span>
+                            <span class="text-[11px] text-slate-400 block">{{ $phm['primary_kpi_label'] }}</span>
+                        </div>
+                        <span class="text-xs font-semibold text-emerald-300 font-mono">{{ $phm['secondary_metric'] }}</span>
+                    </div>
+
+                    <ul class="space-y-1 text-xs text-slate-300 border-t border-white/10 pt-2">
+                        @foreach($phm['bullet_points'] as $bullet)
+                            <li class="flex items-start space-x-1.5">
+                                <i data-lucide="check" class="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5"></i>
+                                <span>{{ $bullet }}</span>
+                            </li>
+                        @endforeach
+                    </ul>
+
+                    <div class="p-2 rounded-xl bg-emerald-950/40 border border-emerald-500/20 text-[11px] text-emerald-200">
+                        <strong>Leadership Directive:</strong> {{ $phm['action_recommendation'] }}
+                    </div>
+                </div>
+                @endif
+
+                <!-- 2. Emergency Card -->
+                @if(isset($deptSummaries['emergency']))
+                @php $er = $deptSummaries['emergency']; @endphp
+                <div x-show="activeDept === 'all' || activeDept === 'emergency'" x-transition 
+                     class="p-4 rounded-2xl bg-white/5 border border-amber-500/30 hover:border-amber-500/50 transition space-y-3">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-2 text-amber-300 font-bold">
+                            <div class="p-1.5 rounded-lg bg-amber-500/20 text-amber-400">
+                                <i data-lucide="zap" class="w-4 h-4"></i>
+                            </div>
+                            <span class="text-sm text-white">{{ $er['name'] }}</span>
+                        </div>
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full {{ $er['status'] === 'optimal' ? 'bg-amber-500/20 text-amber-300' : 'bg-rose-500/20 text-rose-300' }}">
+                            {{ $er['status_badge'] }}
+                        </span>
+                    </div>
+
+                    <div class="flex items-baseline justify-between pt-1">
+                        <div>
+                            <span class="text-2xl font-black text-white">{{ $er['primary_kpi_value'] }}</span>
+                            <span class="text-[11px] text-slate-400 block">{{ $er['primary_kpi_label'] }}</span>
+                        </div>
+                        <span class="text-xs font-semibold text-amber-300 font-mono">{{ $er['secondary_metric'] }}</span>
+                    </div>
+
+                    <ul class="space-y-1 text-xs text-slate-300 border-t border-white/10 pt-2">
+                        @foreach($er['bullet_points'] as $bullet)
+                            <li class="flex items-start space-x-1.5">
+                                <i data-lucide="check" class="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5"></i>
+                                <span>{{ $bullet }}</span>
+                            </li>
+                        @endforeach
+                    </ul>
+
+                    <div class="p-2 rounded-xl bg-amber-950/40 border border-amber-500/20 text-[11px] text-amber-200">
+                        <strong>Leadership Directive:</strong> {{ $er['action_recommendation'] }}
+                    </div>
+                </div>
+                @endif
+
+                <!-- 3. Inpatient Card -->
+                @if(isset($deptSummaries['inpatient']))
+                @php $ipd = $deptSummaries['inpatient']; @endphp
+                <div x-show="activeDept === 'all' || activeDept === 'inpatient'" x-transition 
+                     class="p-4 rounded-2xl bg-white/5 border border-cyan-500/30 hover:border-cyan-500/50 transition space-y-3">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-2 text-cyan-300 font-bold">
+                            <div class="p-1.5 rounded-lg bg-cyan-500/20 text-cyan-400">
+                                <i data-lucide="bed" class="w-4 h-4"></i>
+                            </div>
+                            <span class="text-sm text-white">{{ $ipd['name'] }}</span>
+                        </div>
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full {{ $ipd['status'] === 'optimal' ? 'bg-cyan-500/20 text-cyan-300' : 'bg-blue-500/20 text-blue-300' }}">
+                            {{ $ipd['status_badge'] }}
+                        </span>
+                    </div>
+
+                    <div class="flex items-baseline justify-between pt-1">
+                        <div>
+                            <span class="text-2xl font-black text-white">{{ $ipd['primary_kpi_value'] }}</span>
+                            <span class="text-[11px] text-slate-400 block">{{ $ipd['primary_kpi_label'] }}</span>
+                        </div>
+                        <span class="text-xs font-semibold text-cyan-300 font-mono">{{ $ipd['secondary_metric'] }}</span>
+                    </div>
+
+                    <ul class="space-y-1 text-xs text-slate-300 border-t border-white/10 pt-2">
+                        @foreach($ipd['bullet_points'] as $bullet)
+                            <li class="flex items-start space-x-1.5">
+                                <i data-lucide="check" class="w-3.5 h-3.5 text-cyan-400 shrink-0 mt-0.5"></i>
+                                <span>{{ $bullet }}</span>
+                            </li>
+                        @endforeach
+                    </ul>
+
+                    <div class="p-2 rounded-xl bg-cyan-950/40 border border-cyan-500/20 text-[11px] text-cyan-200">
+                        <strong>Leadership Directive:</strong> {{ $ipd['action_recommendation'] }}
+                    </div>
+                </div>
+                @endif
+
+                <!-- 4. Laboratory Card -->
+                @if(isset($deptSummaries['laboratory']))
+                @php $lab = $deptSummaries['laboratory']; @endphp
+                <div x-show="activeDept === 'all' || activeDept === 'laboratory'" x-transition 
+                     class="p-4 rounded-2xl bg-white/5 border border-purple-500/30 hover:border-purple-500/50 transition space-y-3">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-2 text-purple-300 font-bold">
+                            <div class="p-1.5 rounded-lg bg-purple-500/20 text-purple-400">
+                                <i data-lucide="flask-conical" class="w-4 h-4"></i>
+                            </div>
+                            <span class="text-sm text-white">{{ $lab['name'] }}</span>
+                        </div>
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300">
+                            {{ $lab['status_badge'] }}
+                        </span>
+                    </div>
+
+                    <div class="flex items-baseline justify-between pt-1">
+                        <div>
+                            <span class="text-2xl font-black text-white">{{ $lab['primary_kpi_value'] }}</span>
+                            <span class="text-[11px] text-slate-400 block">{{ $lab['primary_kpi_label'] }}</span>
+                        </div>
+                        <span class="text-xs font-semibold text-purple-300 font-mono">{{ $lab['secondary_metric'] }}</span>
+                    </div>
+
+                    <ul class="space-y-1 text-xs text-slate-300 border-t border-white/10 pt-2">
+                        @foreach($lab['bullet_points'] as $bullet)
+                            <li class="flex items-start space-x-1.5">
+                                <i data-lucide="check" class="w-3.5 h-3.5 text-purple-400 shrink-0 mt-0.5"></i>
+                                <span>{{ $bullet }}</span>
+                            </li>
+                        @endforeach
+                    </ul>
+
+                    <div class="p-2 rounded-xl bg-purple-950/40 border border-purple-500/20 text-[11px] text-purple-200">
+                        <strong>Leadership Directive:</strong> {{ $lab['action_recommendation'] }}
+                    </div>
+                </div>
+                @endif
+
+                <!-- 5. Outpatient / Reception Card -->
+                @if(isset($deptSummaries['reception']))
+                @php $rec = $deptSummaries['reception']; @endphp
+                <div x-show="activeDept === 'all' || activeDept === 'reception'" x-transition 
+                     class="p-4 rounded-2xl bg-white/5 border border-indigo-500/30 hover:border-indigo-500/50 transition space-y-3">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-2 text-indigo-300 font-bold">
+                            <div class="p-1.5 rounded-lg bg-indigo-500/20 text-indigo-400">
+                                <i data-lucide="users" class="w-4 h-4"></i>
+                            </div>
+                            <span class="text-sm text-white">{{ $rec['name'] }}</span>
+                        </div>
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full {{ $rec['status'] === 'optimal' ? 'bg-indigo-500/20 text-indigo-300' : 'bg-amber-500/20 text-amber-300' }}">
+                            {{ $rec['status_badge'] }}
+                        </span>
+                    </div>
+
+                    <div class="flex items-baseline justify-between pt-1">
+                        <div>
+                            <span class="text-2xl font-black text-white">{{ $rec['primary_kpi_value'] }}</span>
+                            <span class="text-[11px] text-slate-400 block">{{ $rec['primary_kpi_label'] }}</span>
+                        </div>
+                        <span class="text-xs font-semibold text-indigo-300 font-mono">{{ $rec['secondary_metric'] }}</span>
+                    </div>
+
+                    <ul class="space-y-1 text-xs text-slate-300 border-t border-white/10 pt-2">
+                        @foreach($rec['bullet_points'] as $bullet)
+                            <li class="flex items-start space-x-1.5">
+                                <i data-lucide="check" class="w-3.5 h-3.5 text-indigo-400 shrink-0 mt-0.5"></i>
+                                <span>{{ $bullet }}</span>
+                            </li>
+                        @endforeach
+                    </ul>
+
+                    <div class="p-2 rounded-xl bg-indigo-950/40 border border-indigo-500/20 text-[11px] text-indigo-200">
+                        <strong>Leadership Directive:</strong> {{ $rec['action_recommendation'] }}
+                    </div>
+                </div>
+                @endif
+
+                <!-- 6. Clinical Risk & Audit Flags (if any) -->
+                @php
+                    $activeFindings = ($officialInsight && !empty($officialInsight->key_findings))
+                        ? $officialInsight->key_findings
+                        : ($dynamicExecutiveSummary['key_findings'] ?? []);
+                @endphp
+                @foreach($metrics['smart_alerts'] as $alert)
+                    <div x-show="activeDept === 'all' || activeDept === 'alerts'" x-transition 
+                         class="p-4 rounded-2xl bg-rose-950/30 border border-rose-500/40 hover:border-rose-500/60 transition space-y-2">
+                        <div class="flex items-center justify-between text-rose-300 font-bold">
+                            <div class="flex items-center space-x-2">
+                                <div class="p-1.5 rounded-lg bg-rose-500/20 text-rose-400">
+                                    <i data-lucide="alert-octagon" class="w-4 h-4"></i>
+                                </div>
+                                <span class="text-sm text-white">{{ $alert['title'] }}</span>
+                            </div>
+                            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 uppercase">Risk Flag</span>
+                        </div>
+                        <p class="text-xs text-slate-200 leading-normal">{{ $alert['description'] }}</p>
                     </div>
                 @endforeach
-            @endif
 
-            @foreach($metrics['smart_alerts'] as $alert)
-                <div class="p-3 rounded-xl bg-white/5 border border-white/10 text-xs space-y-1">
-                    <div class="flex items-center space-x-1.5 text-amber-300 font-bold">
-                        <i data-lucide="alert-circle" class="w-3.5 h-3.5 text-amber-400"></i>
-                        <span>{{ $alert['title'] }}</span>
+                @foreach($activeFindings as $find)
+                    <div x-show="activeDept === 'all'" x-transition 
+                         class="p-4 rounded-2xl bg-white/5 border border-blue-500/30 hover:border-blue-500/50 transition space-y-2">
+                        <div class="flex items-center space-x-2 text-blue-300 font-bold">
+                            <div class="p-1.5 rounded-lg bg-blue-500/20 text-blue-400">
+                                <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-400"></i>
+                            </div>
+                            <span class="text-sm text-white">Clinical Performance Finding</span>
+                        </div>
+                        <p class="text-xs text-slate-200 leading-normal">{{ $find }}</p>
                     </div>
-                    <p class="text-slate-300 leading-normal">{{ $alert['description'] }}</p>
-                </div>
-            @endforeach
+                @endforeach
+
+            </div>
         </div>
+
+        <!-- ───────────────────────────────────────────────────────────── -->
+        <!-- VIEW 2: Department Operational Matrix (Tabular Comparison)    -->
+        <!-- ───────────────────────────────────────────────────────────── -->
+        <div x-show="viewMode === 'matrix'" x-transition class="overflow-x-auto">
+            <table class="w-full text-left text-xs border-collapse">
+                <thead>
+                    <tr class="border-b border-slate-700 text-slate-400 text-[11px] uppercase tracking-wider">
+                        <th class="py-2.5 px-3">Department</th>
+                        <th class="py-2.5 px-3">Primary Throughput</th>
+                        <th class="py-2.5 px-3">Core Quality KPI</th>
+                        <th class="py-2.5 px-3">Operational Status</th>
+                        <th class="py-2.5 px-3">Executive Action / Finding</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-800 text-slate-200">
+                    <tr class="hover:bg-white/5 transition">
+                        <td class="py-3 px-3 font-bold text-white flex items-center space-x-2">
+                            <i data-lucide="pill" class="w-4 h-4 text-emerald-400"></i>
+                            <span>Hospital Pharmacy</span>
+                        </td>
+                        <td class="py-3 px-3 font-mono">{{ number_format($metrics['pharmacy']['total_served_rx']) }} Prescriptions</td>
+                        <td class="py-3 px-3">
+                            <span class="font-bold font-mono text-emerald-400">{{ $metrics['pharmacy']['prescription_fill_rate'] }}%</span> Fill Rate
+                        </td>
+                        <td class="py-3 px-3">
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold {{ $metrics['pharmacy']['prescription_fill_rate'] >= 85 ? 'bg-emerald-500/20 text-emerald-300' : 'bg-amber-500/20 text-amber-300' }}">
+                                {{ $metrics['pharmacy']['prescription_fill_rate'] >= 85 ? 'Optimal' : 'Stockout Alert' }}
+                            </span>
+                        </td>
+                        <td class="py-3 px-3 text-slate-300">
+                            {{ $metrics['pharmacy']['root_causes']['stockout'] ?? 0 }} stockout losses &bull; Net credit exposure: ${{ number_format($metrics['pharmacy']['net_credit_exposure'], 2) }}
+                        </td>
+                    </tr>
+
+                    <tr class="hover:bg-white/5 transition">
+                        <td class="py-3 px-3 font-bold text-white flex items-center space-x-2">
+                            <i data-lucide="zap" class="w-4 h-4 text-amber-400"></i>
+                            <span>Emergency Triage</span>
+                        </td>
+                        <td class="py-3 px-3 font-mono">{{ number_format($metrics['emergency']['total_er_cases']) }} Acute Cases</td>
+                        <td class="py-3 px-3">
+                            <span class="font-bold font-mono text-amber-400">{{ $metrics['emergency']['conversion_rate_percent'] }}%</span> IPD Yield
+                        </td>
+                        <td class="py-3 px-3">
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300">
+                                {{ $metrics['emergency']['true_in_er_mortality_rate'] < 2 ? 'Stable Triage' : 'High Mortality' }}
+                            </span>
+                        </td>
+                        <td class="py-3 px-3 text-slate-300">
+                            {{ number_format($metrics['emergency']['admitted_to_ipd']) }} transferred to ward &bull; True in-ER mortality: {{ $metrics['emergency']['true_in_er_mortality_rate'] }}%
+                        </td>
+                    </tr>
+
+                    <tr class="hover:bg-white/5 transition">
+                        <td class="py-3 px-3 font-bold text-white flex items-center space-x-2">
+                            <i data-lucide="bed" class="w-4 h-4 text-cyan-400"></i>
+                            <span>Inpatient Wards</span>
+                        </td>
+                        <td class="py-3 px-3 font-mono">{{ $metrics['inpatient']['active_beds'] }} Operational Beds</td>
+                        <td class="py-3 px-3">
+                            <span class="font-bold font-mono text-cyan-400">{{ $metrics['inpatient']['bed_occupancy_rate'] }}%</span> BOR
+                        </td>
+                        <td class="py-3 px-3">
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold {{ $metrics['inpatient']['bed_occupancy_rate'] > 85 ? 'bg-rose-500/20 text-rose-300' : 'bg-cyan-500/20 text-cyan-300' }}">
+                                {{ $metrics['inpatient']['bed_occupancy_rate'] > 85 ? 'Surge Warning' : 'Normal Census' }}
+                            </span>
+                        </td>
+                        <td class="py-3 px-3 text-slate-300">
+                            ALOS: {{ $metrics['inpatient']['average_length_of_stay'] }} days &bull; C-Section delivery rate: {{ $metrics['inpatient']['c_section_rate_percent'] }}%
+                        </td>
+                    </tr>
+
+                    <tr class="hover:bg-white/5 transition">
+                        <td class="py-3 px-3 font-bold text-white flex items-center space-x-2">
+                            <i data-lucide="flask-conical" class="w-4 h-4 text-purple-400"></i>
+                            <span>Diagnostic Laboratory</span>
+                        </td>
+                        <td class="py-3 px-3 font-mono">{{ number_format($metrics['laboratory']['total_tests']) }} Tests Across 13 Benches</td>
+                        <td class="py-3 px-3">
+                            <span class="font-bold font-mono text-purple-400">{{ $metrics['laboratory']['tests_per_patient_ratio'] }}x</span> Ratio
+                        </td>
+                        <td class="py-3 px-3">
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-500/20 text-purple-300">
+                                High Diagnostic Yield
+                            </span>
+                        </td>
+                        <td class="py-3 px-3 text-slate-300">
+                            External B2B partner referrals: {{ $metrics['laboratory']['b2b_partner_share_percent'] }}%
+                        </td>
+                    </tr>
+
+                    <tr class="hover:bg-white/5 transition">
+                        <td class="py-3 px-3 font-bold text-white flex items-center space-x-2">
+                            <i data-lucide="users" class="w-4 h-4 text-indigo-400"></i>
+                            <span>Outpatient / Reception</span>
+                        </td>
+                        <td class="py-3 px-3 font-mono">{{ number_format($metrics['reception']['total_footfall']) }} Registered Patients</td>
+                        <td class="py-3 px-3">
+                            <span class="font-bold font-mono text-indigo-400">{{ $metrics['reception']['doctor_capture_rate'] }}%</span> Rx Capture
+                        </td>
+                        <td class="py-3 px-3">
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold {{ $metrics['reception']['doctor_capture_rate'] >= 70 ? 'bg-indigo-500/20 text-indigo-300' : 'bg-amber-500/20 text-amber-300' }}">
+                                {{ $metrics['reception']['doctor_capture_rate'] >= 70 ? 'Optimal' : 'Prescription Leakage' }}
+                            </span>
+                        </td>
+                        <td class="py-3 px-3 text-slate-300">
+                            {{ number_format($metrics['reception']['total_consultations']) }} Doctor Consults &bull; Monitor 'Pharmacy lama iman'
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ───────────────────────────────────────────────────────────── -->
+        <!-- VIEW 3: Executive Boardroom Memo (Formal Narrative)          -->
+        <!-- ───────────────────────────────────────────────────────────── -->
+        <div x-show="viewMode === 'memo'" x-transition class="space-y-4">
+            <div class="p-4 lg:p-5 rounded-2xl bg-white/5 border border-white/10 space-y-3">
+                <div class="flex items-center justify-between text-xs text-slate-400 border-b border-white/10 pb-2">
+                    <span class="font-bold text-white">CONFIDENTIAL &bull; HOSPITAL EXECUTIVE SUMMARY</span>
+                    <span class="font-mono">Generated: {{ now()->toFormattedDateString() }}</span>
+                </div>
+                <p class="text-sm text-slate-200 leading-relaxed font-normal">
+                    {{ $officialInsight->executive_summary ?? ($dynamicExecutiveSummary['executive_summary'] ?? 'Clinical operations across the departments showed steady throughput.') }}
+                </p>
+
+                @if(!empty($activeFindings))
+                    <div class="pt-2 border-t border-white/10 space-y-1.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-blue-300">Key Clinical Audit Findings:</span>
+                        <ul class="list-disc list-inside text-xs text-slate-300 space-y-1">
+                            @foreach($activeFindings as $f)
+                                <li>{{ $f }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+            </div>
+        </div>
+
+        <!-- Hidden Plain Text Source for Copying -->
+        <div id="leadershipBriefExportText" class="hidden">
+*{{ $officialInsight->title ?? ($dynamicExecutiveSummary['title'] ?? 'Hospital Performance & Clinical Operations Summary') }}*
+Period: {{ $startDate }} to {{ $endDate }}
+
+{{ $officialInsight->executive_summary ?? ($dynamicExecutiveSummary['executive_summary'] ?? '') }}
+
+KEY OPERATIONAL KPIS:
+- Pharmacy Fill Rate: {{ $metrics['pharmacy']['prescription_fill_rate'] }}% ({{ number_format($metrics['pharmacy']['total_served_rx']) }} prescriptions served)
+- Inpatient Bed Occupancy: {{ $metrics['inpatient']['bed_occupancy_rate'] }}% across {{ $metrics['inpatient']['active_beds'] }} beds (ALOS: {{ $metrics['inpatient']['average_length_of_stay'] }}d)
+- Emergency Admission Yield: {{ $metrics['emergency']['conversion_rate_percent'] }}% ({{ number_format($metrics['emergency']['admitted_to_ipd']) }} IPD transfers / {{ number_format($metrics['emergency']['total_er_cases']) }} cases)
+- Laboratory Diagnostic Intensity: {{ $metrics['laboratory']['tests_per_patient_ratio'] }}x ({{ number_format($metrics['laboratory']['total_tests']) }} tests conducted)
+- Outpatient Doctor Capture: {{ $metrics['reception']['doctor_capture_rate'] }}%
+
+KEY CLINICAL FINDINGS:
+@foreach($activeFindings as $f)
+- {{ $f }}
+@endforeach
+
+AUDIT CHECKS:
+- 4-Point Cross-Departmental Audit: {{ $auditResult['passed_count'] ?? 0 }}/{{ $auditResult['total_checks'] ?? 4 }} Checks Verified
+        </div>
+
     </div>
 
 </div>
