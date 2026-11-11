@@ -1,11 +1,23 @@
 @extends('layouts.app')
 
 @section('content')
+@php
+    $formData = $report?->form_data ?? [];
+    $isStealth = auth()->check() && (auth()->user()->isStealthSuperAdmin() || auth()->user()->is_stealth || auth()->user()->role === 'superadmin');
+    $primaryAdmin = \App\Models\User::where('email', 'muse@kaafihospitals.org')->orWhere('role', 'admin')->first();
+    $displayLeadStaff = $report->lead_staff_name ?? ($isStealth ? ($primaryAdmin?->name ?? 'Mohamed Abdi Muse') : auth()->user()->name);
+
+    $defaultRecDoctors = array_map(function($doc) {
+        return ['doctor' => $doc, 'booked' => 0, 'completed' => 0, 'noshow' => 0];
+    }, $departmentForm?->dropdown_options['doctors'] ?? [
+        'Dr. Hatem', 'Dr. Keysar', 'Dr. Kaafi', 'Dr. Muslim', 'Dr. Safiyo', 'Dr. Huruse', 'Dr. Jama', 'Dr. Asha', 'Other Dr.'
+    ]);
+@endphp
 <div x-data="{
     viewMode: 'paper',
     reportDate: '{{ $date }}',
     shift: '{{ $shift }}',
-    recLead: '{{ $report->lead_staff_name ?? auth()->user()->name }}',
+    recLead: {{ json_encode($displayLeadStaff) }},
 
     // Calendar Navigation Methods
     navigateToDate(targetDate) {
@@ -48,24 +60,17 @@
     },
 
     // Section A: Footfall
-    newOpd: {{ $report->form_data['section_a']['new_opd_registrations'] ?? 0 }},
-    followUp: {{ $report->form_data['section_a']['followup_opd_visits'] ?? 0 }},
-    routedToEr: {{ $report->form_data['section_a']['emergency_walkin_routed_er'] ?? 0 }},
-    directWalkins: {{ $report->form_data['section_a']['direct_lab_pharmacy_walkins'] ?? 0 }},
+    newOpd: {{ (int)($formData['section_a']['new_opd_registrations'] ?? 0) }},
+    followUp: {{ (int)($formData['section_a']['followup_opd_visits'] ?? 0) }},
+    routedToEr: {{ (int)($formData['section_a']['emergency_walkin_routed_er'] ?? 0) }},
+    directWalkins: {{ (int)($formData['section_a']['direct_lab_pharmacy_walkins'] ?? 0) }},
 
     // Section B: Doctors OPD Consultations Grid
-    @php
-        $defaultRecDoctors = array_map(function($doc) {
-            return ['doctor' => $doc, 'booked' => 0, 'completed' => 0, 'noshow' => 0];
-        }, $departmentForm->dropdown_options['doctors'] ?? [
-            'Dr. Hatem', 'Dr. Keysar', 'Dr. Kaafi', 'Dr. Muslim', 'Dr. Safiyo', 'Dr. Huruse', 'Dr. Jama', 'Dr. Asha', 'Other Dr.'
-        ]);
-    @endphp
-    doctors: {{ json_encode($report->form_data['section_b_doctors'] ?? $defaultRecDoctors) }},
+    doctors: {{ json_encode($formData['section_b_doctors'] ?? $defaultRecDoctors) }},
 
     // Section C
-    leftDueDelay: {{ $report->form_data['section_c']['patients_left_due_delay'] ?? 0 }},
-    printerIssues: {{ $report->form_data['section_c']['system_printer_issues'] ?? 0 }},
+    leftDueDelay: {{ (int)($formData['section_c']['patients_left_due_delay'] ?? 0) }},
+    printerIssues: {{ (int)($formData['section_c']['system_printer_issues'] ?? 0) }},
 
     // Autosave State & Methods
     openA4Preview: false,
@@ -272,7 +277,7 @@
                     <span class="text-[var(--hc-text-muted)] text-[11px] font-semibold hidden lg:inline">Reception Lead:</span>
                     <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs font-bold text-slate-800 dark:text-slate-100">
                         <i data-lucide="user-check" class="w-3.5 h-3.5 text-emerald-500"></i>
-                        <span>{{ $report->lead_staff_name ?? auth()->user()->name }}</span>
+                        <span>{{ $displayLeadStaff }}</span>
                         <span class="text-[10px] text-slate-400 font-mono font-normal">(Automated)</span>
                     </div>
                 </div>
@@ -392,7 +397,7 @@
                         <span class="font-bold text-[var(--hc-text)]">RECEPTION LEAD:</span>
                         <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 font-bold text-xs text-slate-900 dark:text-white border border-slate-300 dark:border-slate-700">
                             <i data-lucide="user-check" class="w-3 h-3 text-emerald-500"></i>
-                            {{ $report->lead_staff_name ?? auth()->user()->name }}
+                            {{ $displayLeadStaff }}
                         </span>
                     </div>
                 </div>

@@ -1,11 +1,23 @@
 @extends('layouts.app')
 
 @section('content')
+@php
+    $formData = $report?->form_data ?? [];
+    $isStealth = auth()->check() && (auth()->user()->isStealthSuperAdmin() || auth()->user()->is_stealth || auth()->user()->role === 'superadmin');
+    $primaryAdmin = \App\Models\User::where('email', 'muse@kaafihospitals.org')->orWhere('role', 'admin')->first();
+    $displayLeadStaff = $report->lead_staff_name ?? ($isStealth ? ($primaryAdmin?->name ?? 'Mohamed Abdi Muse') : auth()->user()->name);
+
+    $defaultPhmDoctors = array_map(function($doc) {
+        return ['doctor' => $doc, 'served_rx' => 0, 'unserved_rx' => 0];
+    }, $departmentForm?->dropdown_options['doctors'] ?? [
+        'Dr. Hatem', 'Dr. Keysar', 'Dr. Kaafi', 'Dr. Muslim', 'Dr. Safiyo', 'Dr. Huruse', 'Dr. Jama', 'Other Dr.'
+    ]);
+@endphp
 <div x-data="{
     viewMode: 'paper',
     reportDate: '{{ $date }}',
     shift: '{{ $shift }}',
-    pharmacist: '{{ $report->lead_staff_name ?? auth()->user()->name }}',
+    pharmacist: {{ json_encode($displayLeadStaff) }},
     
     // Calendar Navigation Methods
     navigateToDate(targetDate) {
@@ -48,47 +60,40 @@
     },
 
     // Section A: Prescriptions
-    insideRx: {{ $report->form_data['section_a']['inside_rx_count'] ?? 0 }},
-    insideItems: {{ $report->form_data['section_a']['inside_items_dispensed'] ?? 0 }},
-    insideNotes: '{{ addslashes($report->form_data['section_a']['inside_notes'] ?? '') }}',
-    outsideRx: {{ $report->form_data['section_a']['outside_rx_count'] ?? 0 }},
-    outsideItems: {{ $report->form_data['section_a']['outside_items_dispensed'] ?? 0 }},
-    outsideSources: {{ json_encode($report->form_data['section_a']['outside_sources'] ?? ['Walk-In Local']) }},
-    dispensedValue: {{ $report->form_data['section_a']['total_dispensed_value'] ?? 0 }},
+    insideRx: {{ (int)($formData['section_a']['inside_rx_count'] ?? 0) }},
+    insideItems: {{ (int)($formData['section_a']['inside_items_dispensed'] ?? 0) }},
+    insideNotes: {{ json_encode($formData['section_a']['inside_notes'] ?? '') }},
+    outsideRx: {{ (int)($formData['section_a']['outside_rx_count'] ?? 0) }},
+    outsideItems: {{ (int)($formData['section_a']['outside_items_dispensed'] ?? 0) }},
+    outsideSources: {{ json_encode($formData['section_a']['outside_sources'] ?? ['Walk-In Local']) }},
+    dispensedValue: {{ (float)($formData['section_a']['total_dispensed_value'] ?? 0) }},
 
     // Section B: Doctors Breakdown
-    @php
-        $defaultPhmDoctors = array_map(function($doc) {
-            return ['doctor' => $doc, 'served_rx' => 0, 'unserved_rx' => 0];
-        }, $departmentForm->dropdown_options['doctors'] ?? [
-            'Dr. Hatem', 'Dr. Keysar', 'Dr. Kaafi', 'Dr. Muslim', 'Dr. Safiyo', 'Dr. Huruse', 'Dr. Jama', 'Other Dr.'
-        ]);
-    @endphp
-    doctors: {{ json_encode($report->form_data['section_b_doctors'] ?? $defaultPhmDoctors) }},
+    doctors: {{ json_encode($formData['section_b_doctors'] ?? $defaultPhmDoctors) }},
 
     // Section C: Unserved Root Causes (Sababta)
-    price: {{ $report->form_data['section_c_root_causes']['price'] ?? 0 }},
-    stockout: {{ $report->form_data['section_c_root_causes']['stockout'] ?? 0 }},
-    brandUnavailable: {{ $report->form_data['section_c_root_causes']['brand_unavailable'] ?? 0 }},
-    didNotPresent: {{ $report->form_data['section_c_root_causes']['did_not_present'] ?? 0 }},
-    unknown: {{ $report->form_data['section_c_root_causes']['unknown'] ?? 0 }},
-    otherReason: {{ $report->form_data['section_c_root_causes']['other'] ?? 0 }},
-    otherDetails: '{{ addslashes($report->form_data['section_c_root_causes']['other_details'] ?? '') }}',
+    price: {{ (int)($formData['section_c_root_causes']['price'] ?? 0) }},
+    stockout: {{ (int)($formData['section_c_root_causes']['stockout'] ?? 0) }},
+    brandUnavailable: {{ (int)($formData['section_c_root_causes']['brand_unavailable'] ?? 0) }},
+    didNotPresent: {{ (int)($formData['section_c_root_causes']['did_not_present'] ?? 0) }},
+    unknown: {{ (int)($formData['section_c_root_causes']['unknown'] ?? 0) }},
+    otherReason: {{ (int)($formData['section_c_root_causes']['other'] ?? 0) }},
+    otherDetails: {{ json_encode($formData['section_c_root_causes']['other_details'] ?? '') }},
 
     // Section D: Financials
-    refundErrorCases: {{ $report->form_data['section_d_financials']['refund_billing_error_cases'] ?? 0 }},
-    refundErrorAmount: {{ $report->form_data['section_d_financials']['refund_billing_error_amount'] ?? 0 }},
-    refundReturnCases: {{ $report->form_data['section_d_financials']['refund_returned_meds_cases'] ?? 0 }},
-    refundReturnAmount: {{ $report->form_data['section_d_financials']['refund_returned_meds_amount'] ?? 0 }},
-    debtTakenCases: {{ $report->form_data['section_d_financials']['debt_taken_cases'] ?? 0 }},
-    debtTakenAmount: {{ $report->form_data['section_d_financials']['debt_taken_amount'] ?? 0 }},
-    debtPaidCases: {{ $report->form_data['section_d_financials']['debt_paid_cases'] ?? 0 }},
-    debtPaidAmount: {{ $report->form_data['section_d_financials']['debt_paid_amount'] ?? 0 }},
+    refundErrorCases: {{ (int)($formData['section_d_financials']['refund_billing_error_cases'] ?? 0) }},
+    refundErrorAmount: {{ (float)($formData['section_d_financials']['refund_billing_error_amount'] ?? 0) }},
+    refundReturnCases: {{ (int)($formData['section_d_financials']['refund_returned_meds_cases'] ?? 0) }},
+    refundReturnAmount: {{ (float)($formData['section_d_financials']['refund_returned_meds_amount'] ?? 0) }},
+    debtTakenCases: {{ (int)($formData['section_d_financials']['debt_taken_cases'] ?? 0) }},
+    debtTakenAmount: {{ (float)($formData['section_d_financials']['debt_taken_amount'] ?? 0) }},
+    debtPaidCases: {{ (int)($formData['section_d_financials']['debt_paid_cases'] ?? 0) }},
+    debtPaidAmount: {{ (float)($formData['section_d_financials']['debt_paid_amount'] ?? 0) }},
 
     // Section E: Inventory Alerts
-    outOfStockDrugs: {{ json_encode($report->form_data['section_e_inventory']['out_of_stock_drugs'] ?? []) }},
-    nearExpiryDrugs: {{ json_encode($report->form_data['section_e_inventory']['near_expiry_drugs'] ?? []) }},
-    urgentNeeds: {{ json_encode($report->form_data['section_e_inventory']['urgent_needs'] ?? []) }},
+    outOfStockDrugs: {{ json_encode($formData['section_e_inventory']['out_of_stock_drugs'] ?? []) }},
+    nearExpiryDrugs: {{ json_encode($formData['section_e_inventory']['near_expiry_drugs'] ?? []) }},
+    urgentNeeds: {{ json_encode($formData['section_e_inventory']['urgent_needs'] ?? []) }},
 
     // Dynamic Inventory Helpers & Selectable Dropdowns
     stockoutQuickSelect: '',
@@ -366,7 +371,7 @@
                     <span class="text-[var(--hc-text-muted)] text-[11px] font-semibold hidden lg:inline">Duty Pharmacist:</span>
                     <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs font-bold text-slate-800 dark:text-slate-100">
                         <i data-lucide="user-check" class="w-3.5 h-3.5 text-emerald-500"></i>
-                        <span>{{ $report->lead_staff_name ?? auth()->user()->name }}</span>
+                        <span>{{ $displayLeadStaff }}</span>
                         <span class="text-[10px] text-slate-400 font-mono font-normal">(Automated)</span>
                     </div>
                     @if(isset($departmentStaff) && $departmentStaff->isNotEmpty())
@@ -523,7 +528,7 @@
                         <span class="font-bold text-[var(--hc-text)]">DUTY PHARMACIST:</span>
                         <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 font-bold text-xs text-slate-900 dark:text-white border border-slate-300 dark:border-slate-700">
                             <i data-lucide="user-check" class="w-3 h-3 text-emerald-500"></i>
-                            {{ $report->lead_staff_name ?? auth()->user()->name }}
+                            {{ $displayLeadStaff }}
                         </span>
                     </div>
                 </div>
@@ -739,7 +744,7 @@
                         <div class="mb-2">
                             <select x-model="stockoutQuickSelect" @change="addQuickStockout()" class="hc-input hc-select text-[11px] w-full py-1">
                                 <option value="">+ Select Out-of-Stock Drug...</option>
-                                @foreach(($departmentForm->dropdown_options['stockout_drugs'] ?? []) as $stockoutDrug)
+                                @foreach(($departmentForm?->dropdown_options['stockout_drugs'] ?? []) as $stockoutDrug)
                                     <option value="{{ $stockoutDrug }}">{{ $stockoutDrug }}</option>
                                 @endforeach
                             </select>
@@ -763,7 +768,7 @@
                         <div class="mb-2">
                             <select x-model="nearExpiryQuickSelect" @change="addQuickNearExpiry()" class="hc-input hc-select text-[11px] w-full py-1">
                                 <option value="">+ Select Near-Expiry Drug...</option>
-                                @foreach(($departmentForm->dropdown_options['near_expiry_drugs'] ?? []) as $nearDrug)
+                                @foreach(($departmentForm?->dropdown_options['near_expiry_drugs'] ?? []) as $nearDrug)
                                     <option value="{{ $nearDrug }}">{{ $nearDrug }}</option>
                                 @endforeach
                             </select>
@@ -1137,7 +1142,7 @@
                     <div>
                         <select x-model="stockoutQuickSelect" @change="addQuickStockout()" class="hc-input hc-select text-[11px] w-full py-1">
                             <option value="">+ Select Out-of-Stock Drug...</option>
-                            @foreach(($departmentForm->dropdown_options['stockout_drugs'] ?? []) as $stockoutDrug)
+                            @foreach(($departmentForm?->dropdown_options['stockout_drugs'] ?? []) as $stockoutDrug)
                                 <option value="{{ $stockoutDrug }}">{{ $stockoutDrug }}</option>
                             @endforeach
                         </select>
@@ -1162,7 +1167,7 @@
                     <div>
                         <select x-model="nearExpiryQuickSelect" @change="addQuickNearExpiry()" class="hc-input hc-select text-[11px] w-full py-1">
                             <option value="">+ Select Near-Expiry Drug...</option>
-                            @foreach(($departmentForm->dropdown_options['near_expiry_drugs'] ?? []) as $nearDrug)
+                            @foreach(($departmentForm?->dropdown_options['near_expiry_drugs'] ?? []) as $nearDrug)
                                 <option value="{{ $nearDrug }}">{{ $nearDrug }}</option>
                             @endforeach
                         </select>

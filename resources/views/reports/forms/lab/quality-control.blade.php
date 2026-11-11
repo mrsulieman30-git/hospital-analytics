@@ -2,7 +2,7 @@
      TAB 3: QUALITY CONTROL & ANALYZER CALIBRATIONS
      ========================================================================= --}}
 @php
-    $configuredAnalyzers = $departmentForm->dropdown_options['analyzers'] ?? [
+    $configuredAnalyzers = $departmentForm?->dropdown_options['analyzers'] ?? [
         'Mindray BA 88A',
         'Mindray BC5000 CBC Analyzer',
         '107 Microscope',
@@ -14,7 +14,7 @@
         'Sysmex XP-300',
         'ISE Electrolyte Pro',
     ];
-    $configuredQcTests = $departmentForm->dropdown_options['qc_tests'] ?? [
+    $configuredQcTests = $departmentForm?->dropdown_options['qc_tests'] ?? [
         'Blood Glucose (Fasting / Random)',
         'Serum Creatinine (Jaffe Kinetic)',
         'Blood Urea Nitrogen (BUN) / Urea',
@@ -41,7 +41,7 @@
         'D-Dimer Quantitative Assay',
         'C-Reactive Protein (CRP Quantitative)',
     ];
-    $configuredCorrective = $departmentForm->dropdown_options['corrective_actions'] ?? [
+    $configuredCorrective = $departmentForm?->dropdown_options['corrective_actions'] ?? [
         'Recalibration performed with fresh calibrator lot',
         'Cuvette / optical path washed & recalibrated',
         'Reagent vial replaced & verified with controls',
@@ -142,9 +142,7 @@
                             {{-- Selectable Analyzer Dropdown --}}
                             <td class="p-1.5">
                                 <select x-model="cal.analyzer" class="hc-input hc-select text-xs font-medium w-full py-1.5 px-2 truncate">
-                                    <template x-if="cal.analyzer && !{{ json_encode($configuredAnalyzers) }}.includes(cal.analyzer)">
-                                        <option :value="cal.analyzer" x-text="cal.analyzer" selected></option>
-                                    </template>
+                                    <option value="">-- Select Analyzer --</option>
                                     @foreach($configuredAnalyzers as $analyzerName)
                                         <option value="{{ $analyzerName }}">{{ $analyzerName }}</option>
                                     @endforeach

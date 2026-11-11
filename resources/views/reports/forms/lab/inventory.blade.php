@@ -2,14 +2,14 @@
      TAB 4: LABORATORY INVENTORY & RECEIVED SUPPLIES
      ========================================================================= --}}
 @php
-    $labSuppliers = $departmentForm->dropdown_options['suppliers'] ?? [
+    $labSuppliers = $departmentForm?->dropdown_options['suppliers'] ?? [
         'Somali Medical Supplies Co.',
         'Horn of Africa Diagnostic Distributors',
         'Banadir Scientific & Healthcare Ltd.',
         'Global Health Reagents Mogadishu',
     ];
     $commonReagents = array_unique(array_merge(
-        $departmentForm->dropdown_options['nil_reagents'] ?? [],
+        $departmentForm?->dropdown_options['nil_reagents'] ?? [],
         [
             'Mindray BA 88A Glucose Reagent 4x50ml',
             'Mindray BA 88A Urea/BUN Kinetic Kit',
@@ -28,6 +28,7 @@
         ]
     ));
     $labBrands = ['Mindray', 'Sysmex', 'Getein', 'Finecare', 'BD Vacutainer', 'Biolabo', 'Human Diagnostics', 'Roche', 'Spinreact'];
+    $unitOptions = ['Box', 'Kit', 'Bottle', 'Piece', 'Bag', 'Pack', 'Vial', 'Roll', 'Carton'];
 @endphp
 
 <!-- Fast Selection Datalists for Inventory -->
@@ -125,9 +126,9 @@
                                 <div class="flex items-center gap-1">
                                     <input type="number" min="1" x-model.number="inv.quantity" class="hc-input text-center font-bold text-xs w-16" placeholder="1">
                                     <select x-model="inv.unit" class="hc-input hc-select text-xs flex-1">
-                                        <template x-for="u in unitOptions" :key="u">
-                                            <option :value="u" x-text="u"></option>
-                                        </template>
+                                        @foreach($unitOptions as $u)
+                                            <option value="{{ $u }}">{{ $u }}</option>
+                                        @endforeach
                                     </select>
                                 </div>
                             </div>

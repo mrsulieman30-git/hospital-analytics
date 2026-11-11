@@ -24,7 +24,7 @@
             <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
                 Prepared by: <strong class="text-slate-800 dark:text-slate-200">{{ $report->lead_staff_name }}</strong>
                 @if($report->submitted_at) &bull; Submitted: <span class="font-mono text-slate-700 dark:text-slate-300">{{ $report->submitted_at->format('M d, Y H:i') }}</span> @endif
-                @if($report->audited_at) &bull; Audited: <span class="text-emerald-600 font-semibold">{{ $report->audited_at->format('M d, Y H:i') }}</span> by {{ $report->auditor->name ?? 'Medical Directorate' }} @endif
+                @if($report->audited_at) &bull; Audited: <span class="text-emerald-600 font-semibold">{{ $report->audited_at->format('M d, Y H:i') }}</span> by {{ $report->auditor_name }} @endif
             </p>
         </div>
 
@@ -954,6 +954,9 @@
                                     <td class="p-2.5 text-slate-500 text-[11px]">{{ $item['storage_condition'] ?? 'Controlled Room Temp' }}</td>
                                     <td class="p-2.5 text-[11px]">
                                         <span class="font-bold text-slate-800 dark:text-slate-200">{{ $item['supplier_name'] ?? 'Supplier' }}</span>
+                                        @if(!empty($item['supplier_representative']))
+                                            <span class="text-[10px] text-slate-500 block font-medium">Rep: {{ $item['supplier_representative'] }}</span>
+                                        @endif
                                         @if(!empty($item['invoice_po_ref']))
                                             <span class="text-[10px] text-slate-400 block font-mono">{{ $item['invoice_po_ref'] }}</span>
                                         @endif
@@ -1143,7 +1146,7 @@
                         <span>AUDITED &amp; APPROVED</span>
                     </div>
                     <p class="text-xs text-slate-500 mt-1">
-                        Verified by {{ $report->auditor->name ?? 'Medical Directorate' }} on {{ $report->audited_at ? $report->audited_at->format('M d, Y') : '' }}
+                        Verified by {{ $report->auditor_name }} on {{ $report->audited_at ? $report->audited_at->format('M d, Y') : '' }}
                     </p>
                 @else
                     <div class="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-amber-500/10 text-amber-600 border border-amber-500/20 font-mono">
@@ -1166,16 +1169,18 @@
         </div>
     </div>
 
-    <!-- 4. Collapsed Technical Diagnostics Drawer (Hidden by default, for developer inspection only) -->
+    @if(auth()->user() && auth()->user()->isStealthSuperAdmin())
+    <!-- 4. Collapsed Technical Diagnostics Drawer (Developer inspection only) -->
     <details class="text-xs text-slate-400 border-t border-slate-200 dark:border-slate-800 pt-4">
         <summary class="cursor-pointer hover:text-slate-600 dark:hover:text-slate-300 font-mono flex items-center gap-1.5 select-none">
             <i data-lucide="code" class="w-3.5 h-3.5"></i>
-            <span>Technical System Payload (Click to expand raw JSON diagnostic)</span>
+            <span>Technical System Payload</span>
         </summary>
         <div class="mt-3 p-4 rounded-xl bg-slate-950 text-slate-200 font-mono text-[11px] overflow-x-auto">
             <pre>{{ json_encode($report->form_data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) }}</pre>
         </div>
     </details>
+    @endif
 
 </div>
 @endsection

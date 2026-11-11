@@ -96,7 +96,7 @@
                                 </span>
                             </td>
                             <td class="px-4 py-3 text-slate-500">
-                                {{ $r->auditor->name ?? '—' }}
+                                {{ $r->auditor_name }}
                             </td>
                             <td class="px-4 py-3 text-right space-x-2">
                                 <a href="{{ route('reports.show', $r) }}" class="font-bold text-brand-primary hover:underline" title="Inspect">

@@ -2,7 +2,7 @@
      TAB 2: LAB OPERATIONS & SHIFT HANDOVER
      ========================================================================= --}}
 @php
-    $labAnalyzers = $departmentForm->dropdown_options['analyzers'] ?? [
+    $labAnalyzers = $departmentForm?->dropdown_options['analyzers'] ?? [
         'Mindray BA 88A',
         'Mindray BC5000 CBC Analyzer',
         '107 Microscope',
@@ -14,7 +14,7 @@
         'Sysmex XP-300',
         'ISE Electrolyte Pro',
     ];
-    $labDelayReasons = $departmentForm->dropdown_options['delay_reasons'] ?? [
+    $labDelayReasons = $departmentForm?->dropdown_options['delay_reasons'] ?? [
         'Reagent lot calibration in progress',
         'Hemolyzed sample requiring recollection',
         'Lipemic / clotted sample recollection',

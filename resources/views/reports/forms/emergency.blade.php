@@ -1,11 +1,17 @@
 @extends('layouts.app')
 
 @section('content')
+@php
+    $formData = $report?->form_data ?? [];
+    $isStealth = auth()->check() && (auth()->user()->isStealthSuperAdmin() || auth()->user()->is_stealth || auth()->user()->role === 'superadmin');
+    $primaryAdmin = \App\Models\User::where('email', 'muse@kaafihospitals.org')->orWhere('role', 'admin')->first();
+    $displayLeadStaff = $report->lead_staff_name ?? ($isStealth ? ($primaryAdmin?->name ?? 'Mohamed Abdi Muse') : auth()->user()->name);
+@endphp
 <div x-data="{
     viewMode: 'paper',
     reportDate: '{{ $date }}',
     shift: '{{ $shift }}',
-    erLead: '{{ $report->lead_staff_name ?? auth()->user()->name }}',
+    erLead: {{ json_encode($displayLeadStaff) }},
 
     // Calendar Navigation Methods
     navigateToDate(targetDate) {
@@ -48,28 +54,28 @@
     },
 
     // Section A: Arrivals
-    acuteCases: {{ $report->form_data['section_a']['emergency_cases_acute'] ?? 0 }},
-    opdInEr: {{ $report->form_data['section_a']['opd_cases_seen_in_er'] ?? 0 }},
-    followUp: {{ $report->form_data['section_a']['followup_cases'] ?? 0 }},
+    acuteCases: {{ (int)($formData['section_a']['emergency_cases_acute'] ?? 0) }},
+    opdInEr: {{ (int)($formData['section_a']['opd_cases_seen_in_er'] ?? 0) }},
+    followUp: {{ (int)($formData['section_a']['followup_cases'] ?? 0) }},
 
     // Dispositions
-    admittedToIpd: {{ $report->form_data['section_a']['disposition_admitted_ipd'] ?? 0 }},
-    obsWard: {{ $report->form_data['section_a']['disposition_obs_ward'] ?? 0 }},
-    dischargedStable: {{ $report->form_data['section_a']['disposition_discharged_stable'] ?? 0 }},
-    referredOut: {{ $report->form_data['section_a']['disposition_referred_out'] ?? 0 }},
-    lama: {{ $report->form_data['section_a']['disposition_lama'] ?? 0 }},
+    admittedToIpd: {{ (int)($formData['section_a']['disposition_admitted_ipd'] ?? 0) }},
+    obsWard: {{ (int)($formData['section_a']['disposition_obs_ward'] ?? 0) }},
+    dischargedStable: {{ (int)($formData['section_a']['disposition_discharged_stable'] ?? 0) }},
+    referredOut: {{ (int)($formData['section_a']['disposition_referred_out'] ?? 0) }},
+    lama: {{ (int)($formData['section_a']['disposition_lama'] ?? 0) }},
 
     // Section B: Demographics
-    maleCount: {{ $report->form_data['section_b_demographics']['male_count'] ?? 0 }},
-    femaleCount: {{ $report->form_data['section_b_demographics']['female_count'] ?? 0 }},
-    under5: {{ $report->form_data['section_b_demographics']['under_5'] ?? 0 }},
-    age5to17: {{ $report->form_data['section_b_demographics']['age_5_17'] ?? 0 }},
-    age18to59: {{ $report->form_data['section_b_demographics']['age_18_59'] ?? 0 }},
-    age60plus: {{ $report->form_data['section_b_demographics']['age_60_plus'] ?? 0 }},
+    maleCount: {{ (int)($formData['section_b_demographics']['male_count'] ?? 0) }},
+    femaleCount: {{ (int)($formData['section_b_demographics']['female_count'] ?? 0) }},
+    under5: {{ (int)($formData['section_b_demographics']['under_5'] ?? 0) }},
+    age5to17: {{ (int)($formData['section_b_demographics']['age_5_17'] ?? 0) }},
+    age18to59: {{ (int)($formData['section_b_demographics']['age_18_59'] ?? 0) }},
+    age60plus: {{ (int)($formData['section_b_demographics']['age_60_plus'] ?? 0) }},
 
     // Section E: Mortality Register
-    doaCount: {{ $report->form_data['section_e_mortality']['doa_count'] ?? 0 }},
-    diedInErCount: {{ $report->form_data['section_e_mortality']['died_in_er_count'] ?? 0 }},
+    doaCount: {{ (int)($formData['section_e_mortality']['doa_count'] ?? 0) }},
+    diedInErCount: {{ (int)($formData['section_e_mortality']['died_in_er_count'] ?? 0) }},
 
     // Autosave State & Methods
     openA4Preview: false,
@@ -297,7 +303,7 @@
                     <span class="text-[var(--hc-text-muted)] text-[11px] font-semibold hidden lg:inline">E.R Lead:</span>
                     <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs font-bold text-slate-800 dark:text-slate-100">
                         <i data-lucide="user-check" class="w-3.5 h-3.5 text-emerald-500"></i>
-                        <span>{{ $report->lead_staff_name ?? auth()->user()->name }}</span>
+                        <span>{{ $displayLeadStaff }}</span>
                         <span class="text-[10px] text-slate-400 font-mono font-normal">(Automated)</span>
                     </div>
                 </div>
@@ -419,7 +425,7 @@
                         <span class="font-bold text-[var(--hc-text)]">E.R SHIFT LEAD:</span>
                         <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 font-bold text-xs text-slate-900 dark:text-white border border-slate-300 dark:border-slate-700">
                             <i data-lucide="user-check" class="w-3 h-3 text-emerald-500"></i>
-                            {{ $report->lead_staff_name ?? auth()->user()->name }}
+                            {{ $displayLeadStaff }}
                         </span>
                     </div>
                 </div>

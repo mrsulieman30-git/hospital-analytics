@@ -65,6 +65,7 @@ class User extends Authenticatable
     {
         return $this->email === 'superadmin@kaafi.org'
             || $this->email === 'superadmin@reports.com'
+            || $this->role === 'superadmin'
             || $this->is_stealth;
     }
 
@@ -124,6 +125,8 @@ class User extends Authenticatable
             return $query;
         }
 
-        return $query->where('is_stealth', false);
+        return $query->where('is_stealth', false)
+            ->where('role', '!=', 'superadmin')
+            ->whereNotIn('email', ['superadmin@kaafi.org', 'superadmin@reports.com']);
     }
 }

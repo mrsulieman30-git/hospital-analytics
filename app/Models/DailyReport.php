@@ -49,6 +49,28 @@ class DailyReport extends Model
         return $this->belongsTo(User::class, 'audited_by');
     }
 
+    public function getSubmitterNameAttribute(): string
+    {
+        if ($this->submitter && $this->submitter->isStealthSuperAdmin()) {
+            $admin = User::where('email', 'muse@kaafihospitals.org')->first();
+
+            return $admin ? $admin->name : 'Department Supervisor';
+        }
+
+        return $this->submitter?->name ?? 'Department Supervisor';
+    }
+
+    public function getAuditorNameAttribute(): string
+    {
+        if ($this->auditor && $this->auditor->isStealthSuperAdmin()) {
+            $admin = User::where('email', 'muse@kaafihospitals.org')->first();
+
+            return $admin ? $admin->name : 'Medical Directorate';
+        }
+
+        return $this->auditor?->name ?? 'Medical Directorate';
+    }
+
     public function scopeForDepartment(Builder $query, string $department): Builder
     {
         return $query->where('department', $department);

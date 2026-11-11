@@ -23,6 +23,11 @@
         ['test_name' => 'HbA1c Glycated Hemoglobin', 'analyzer' => 'Mindray BA 88A', 'standard_absorption' => 0.145],
     ];
 
+    $formData = $report?->form_data ?? [];
+    $isStealth = auth()->check() && (auth()->user()->isStealthSuperAdmin() || auth()->user()->is_stealth || auth()->user()->role === 'superadmin');
+    $primaryAdmin = \App\Models\User::where('email', 'muse@kaafihospitals.org')->orWhere('role', 'admin')->first();
+    $displayLeadStaff = $report->lead_staff_name ?? ($isStealth ? ($primaryAdmin?->name ?? 'Mohamed Abdi Muse') : auth()->user()->name);
+
     // For new day: standard tests are ready with standard absorption, but measured absorption and qc_status remain blank
     $cleanCalibrations = [];
     foreach ($defaultStandardTests as $test) {
@@ -33,24 +38,24 @@
             'measured_absorption' => null,
             'calibrator_lot' => '',
             'qc_status' => '',
-            'calibrated_by' => $report->lead_staff_name ?? auth()->user()->name,
+            'calibrated_by' => $displayLeadStaff,
             'calibration_date' => $date,
             'corrective_action' => '',
         ];
     }
 
-    $initialCalibrations = $report?->form_data['section_f_quality_control']['calibrations'] ?? $cleanCalibrations;
-    $initialIncomplete = $report?->form_data['section_e_lab_operations']['incomplete_tests'] ?? [];
-    $initialTroubleshooting = $report?->form_data['section_e_lab_operations']['equipment_troubleshooting'] ?? [];
-    $initialReceived = $report?->form_data['section_g_inventory_supplies']['received_items'] ?? [];
-    $initialPartners = $report?->form_data['section_b_partners'] ?? [];
-    $initialNilItems = $report?->form_data['section_d_nil_items']['items'] ?? [];
+    $initialCalibrations = $formData['section_f_quality_control']['calibrations'] ?? $cleanCalibrations;
+    $initialIncomplete = $formData['section_e_lab_operations']['incomplete_tests'] ?? [];
+    $initialTroubleshooting = $formData['section_e_lab_operations']['equipment_troubleshooting'] ?? [];
+    $initialReceived = $formData['section_g_inventory_supplies']['received_items'] ?? [];
+    $initialPartners = $formData['section_b_partners'] ?? [];
+    $initialNilItems = $formData['section_d_nil_items']['items'] ?? [];
 
     // Master Catalog & 13 Lab Types from LMS
     $labCatalog = \App\Services\LmsLabReportParserService::MASTER_TEST_CATALOG;
     $labTypesMeta = \App\Services\LmsLabReportParserService::LAB_TYPES;
 
-    $savedTests = $report?->form_data['section_c_benches_and_quality']['tests'] ?? [];
+    $savedTests = $formData['section_c_benches_and_quality']['tests'] ?? [];
     $savedTestMap = [];
     foreach ($savedTests as $st) {
         if (!empty($st['test_name'])) {
@@ -89,40 +94,40 @@
 
     reportDate: '{{ $date }}',
     shift: '{{ $shift ?? '24-Hour Daily Summary' }}',
-    labLead: '{{ $report->lead_staff_name ?? auth()->user()->name }}',
-    currentUser: '{{ auth()->user()->name }}',
+    labLead: {{ json_encode($displayLeadStaff) }},
+    currentUser: {{ json_encode($isStealth ? ($primaryAdmin?->name ?? 'Mohamed Abdi Muse') : auth()->user()->name) }},
 
     // Section A: Volume by Source (Defaults to 0 on new days)
-    opdPts: {{ $report->form_data['section_a_volume']['opd_patients'] ?? 0 }},
-    opdTests: {{ $report->form_data['section_a_volume']['opd_tests'] ?? 0 }},
-    erPts: {{ $report->form_data['section_a_volume']['er_patients'] ?? 0 }},
-    erTests: {{ $report->form_data['section_a_volume']['er_tests'] ?? 0 }},
-    ipdPts: {{ $report->form_data['section_a_volume']['ipd_patients'] ?? 0 }},
-    ipdTests: {{ $report->form_data['section_a_volume']['ipd_tests'] ?? 0 }},
-    walkinPts: {{ $report->form_data['section_a_volume']['outside_walkin_pts'] ?? 0 }},
-    partnerPts: {{ $report->form_data['section_a_volume']['outside_partner_pts'] ?? 0 }},
-    outsideTests: {{ $report->form_data['section_a_volume']['outside_tests'] ?? 0 }},
+    opdPts: {{ (int)($formData['section_a_volume']['opd_patients'] ?? 0) }},
+    opdTests: {{ (int)($formData['section_a_volume']['opd_tests'] ?? 0) }},
+    erPts: {{ (int)($formData['section_a_volume']['er_patients'] ?? 0) }},
+    erTests: {{ (int)($formData['section_a_volume']['er_tests'] ?? 0) }},
+    ipdPts: {{ (int)($formData['section_a_volume']['ipd_patients'] ?? 0) }},
+    ipdTests: {{ (int)($formData['section_a_volume']['ipd_tests'] ?? 0) }},
+    walkinPts: {{ (int)($formData['section_a_volume']['outside_walkin_pts'] ?? 0) }},
+    partnerPts: {{ (int)($formData['section_a_volume']['outside_partner_pts'] ?? 0) }},
+    outsideTests: {{ (int)($formData['section_a_volume']['outside_tests'] ?? 0) }},
 
     // Section B: B2B Partners (Empty on new days)
     partners: {{ json_encode($initialPartners, JSON_UNESCAPED_SLASHES) }},
 
     // Section C: Benches & Quality (13 LMS Specialties)
-    benchHematology: {{ $report->form_data['section_c_benches_and_quality']['hematology'] ?? ($report->form_data['section_c_benches_and_quality']['haematology'] ?? 0) }},
-    benchBiochemistry: {{ $report->form_data['section_c_benches_and_quality']['biochemistry'] ?? 0 }},
-    benchSerology: {{ $report->form_data['section_c_benches_and_quality']['serology_immunology'] ?? ($report->form_data['section_c_benches_and_quality']['serology'] ?? 0) }},
-    benchMicrobiology: {{ $report->form_data['section_c_benches_and_quality']['microbiology_parasitology'] ?? 0 }},
-    benchHormones: {{ $report->form_data['section_c_benches_and_quality']['hormones_special'] ?? ($report->form_data['section_c_benches_and_quality']['hormones'] ?? 0) }},
-    benchBloodBank: {{ $report->form_data['section_c_benches_and_quality']['blood_bank'] ?? 0 }},
-    benchUrine: {{ $report->form_data['section_c_benches_and_quality']['urine'] ?? 0 }},
-    benchStool: {{ $report->form_data['section_c_benches_and_quality']['stool'] ?? 0 }},
-    benchQuantitative: {{ $report->form_data['section_c_benches_and_quality']['quantitative_test'] ?? 0 }},
-    benchCoagulation: {{ $report->form_data['section_c_benches_and_quality']['coagulation_profile'] ?? 0 }},
-    benchSemen: {{ $report->form_data['section_c_benches_and_quality']['semen_analysis'] ?? 0 }},
-    benchTb: {{ $report->form_data['section_c_benches_and_quality']['tb_analysis'] ?? 0 }},
-    benchBodyFluids: {{ $report->form_data['section_c_benches_and_quality']['body_fluids'] ?? 0 }},
-    sampleRejections: {{ $report->form_data['section_c_benches_and_quality']['sample_rejections'] ?? 0 }},
-    delayedTat: {{ $report->form_data['section_c_benches_and_quality']['delayed_tests_tat'] ?? 0 }},
-    criticalValues: {{ $report->form_data['section_c_benches_and_quality']['critical_values_reported'] ?? 0 }},
+    benchHematology: {{ (int)($formData['section_c_benches_and_quality']['hematology'] ?? ($formData['section_c_benches_and_quality']['haematology'] ?? 0)) }},
+    benchBiochemistry: {{ (int)($formData['section_c_benches_and_quality']['biochemistry'] ?? 0) }},
+    benchSerology: {{ (int)($formData['section_c_benches_and_quality']['serology_immunology'] ?? ($formData['section_c_benches_and_quality']['serology'] ?? 0)) }},
+    benchMicrobiology: {{ (int)($formData['section_c_benches_and_quality']['microbiology_parasitology'] ?? 0) }},
+    benchHormones: {{ (int)($formData['section_c_benches_and_quality']['hormones_special'] ?? ($formData['section_c_benches_and_quality']['hormones'] ?? 0)) }},
+    benchBloodBank: {{ (int)($formData['section_c_benches_and_quality']['blood_bank'] ?? 0) }},
+    benchUrine: {{ (int)($formData['section_c_benches_and_quality']['urine'] ?? 0) }},
+    benchStool: {{ (int)($formData['section_c_benches_and_quality']['stool'] ?? 0) }},
+    benchQuantitative: {{ (int)($formData['section_c_benches_and_quality']['quantitative_test'] ?? 0) }},
+    benchCoagulation: {{ (int)($formData['section_c_benches_and_quality']['coagulation_profile'] ?? 0) }},
+    benchSemen: {{ (int)($formData['section_c_benches_and_quality']['semen_analysis'] ?? 0) }},
+    benchTb: {{ (int)($formData['section_c_benches_and_quality']['tb_analysis'] ?? 0) }},
+    benchBodyFluids: {{ (int)($formData['section_c_benches_and_quality']['body_fluids'] ?? 0) }},
+    sampleRejections: {{ (int)($formData['section_c_benches_and_quality']['sample_rejections'] ?? 0) }},
+    delayedTat: {{ (int)($formData['section_c_benches_and_quality']['delayed_tests_tat'] ?? 0) }},
+    criticalValues: {{ (int)($formData['section_c_benches_and_quality']['critical_values_reported'] ?? 0) }},
 
     // Individual Tests & Smart Filtering State
     allCatalogTests: {{ json_encode($initialCatalogTests, JSON_UNESCAPED_SLASHES) }},
@@ -146,10 +151,10 @@
     // Section E: Lab Operations & Shift Handover (Empty on new days)
     incompleteTests: {{ json_encode($initialIncomplete, JSON_UNESCAPED_SLASHES) }},
     equipmentIssues: {{ json_encode($initialTroubleshooting, JSON_UNESCAPED_SLASHES) }},
-    shiftHandoverNotes: '{{ addslashes($report->form_data['section_e_lab_operations']['shift_handover']['shift_notes'] ?? '') }}',
-    incomingStaff: '{{ addslashes($report->form_data['section_e_lab_operations']['shift_handover']['incoming_staff'] ?? '') }}',
-    managerNotes: '{{ addslashes($report->form_data['section_e_lab_operations']['shift_handover']['manager_notes'] ?? '') }}',
-    operationalUrgency: '{{ $report->form_data['section_e_lab_operations']['shift_handover']['urgency_level'] ?? 'routine' }}',
+    shiftHandoverNotes: {{ json_encode($formData['section_e_lab_operations']['shift_handover']['shift_notes'] ?? '') }},
+    incomingStaff: {{ json_encode($formData['section_e_lab_operations']['shift_handover']['incoming_staff'] ?? '') }},
+    managerNotes: {{ json_encode($formData['section_e_lab_operations']['shift_handover']['manager_notes'] ?? '') }},
+    operationalUrgency: {{ json_encode($formData['section_e_lab_operations']['shift_handover']['urgency_level'] ?? 'routine') }},
 
     // Section F: Quality Control & Calibration Register (Standard tests listed, measurements clean)
     calibrations: {{ json_encode($initialCalibrations, JSON_UNESCAPED_SLASHES) }},
@@ -787,7 +792,7 @@ class="max-w-7xl mx-auto space-y-6">
                     <span class="text-[var(--hc-text-muted)] text-[11px] font-semibold hidden lg:inline">Lab Lead:</span>
                     <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs font-bold text-slate-800 dark:text-slate-100">
                         <i data-lucide="user-check" class="w-3.5 h-3.5 text-emerald-500"></i>
-                        <span>{{ $report->lead_staff_name ?? auth()->user()->name }}</span>
+                        <span>{{ $displayLeadStaff }}</span>
                         <span class="text-[10px] text-slate-400 font-mono font-normal">(Automated)</span>
                     </div>
                 </div>
@@ -1062,7 +1067,7 @@ class="max-w-7xl mx-auto space-y-6">
                         <span class="font-bold text-[var(--hc-text)]">LAB TECHNOLOGIST:</span>
                         <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 font-bold text-xs text-slate-900 dark:text-white border border-slate-300 dark:border-slate-700">
                             <i data-lucide="user-check" class="w-3 h-3 text-emerald-500"></i>
-                            {{ $report->lead_staff_name ?? auth()->user()->name }}
+                            {{ $displayLeadStaff }}
                         </span>
                     </div>
                 </div>

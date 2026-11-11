@@ -1,12 +1,18 @@
 @extends('layouts.app')
 
 @section('content')
+@php
+    $formData = $report?->form_data ?? [];
+    $isStealth = auth()->check() && (auth()->user()->isStealthSuperAdmin() || auth()->user()->is_stealth || auth()->user()->role === 'superadmin');
+    $primaryAdmin = \App\Models\User::where('email', 'muse@kaafihospitals.org')->orWhere('role', 'admin')->first();
+    $displayLeadStaff = $report->lead_staff_name ?? ($isStealth ? ($primaryAdmin?->name ?? 'Mohamed Abdi Muse') : auth()->user()->name);
+@endphp
 <div x-data="{
     viewMode: 'paper',
     reportDate: '{{ $date }}',
     shift: '24-Hour Daily Summary',
-    ipdLead: '{{ $report->lead_staff_name ?? auth()->user()->name }}',
-    activeBeds: {{ $report->form_data['header']['total_active_beds'] ?? 60 }},
+    ipdLead: {{ json_encode($displayLeadStaff) }},
+    activeBeds: {{ (int)($formData['header']['total_active_beds'] ?? 60) }},
 
     // Calendar Navigation Methods
     navigateToDate(targetDate) {
@@ -38,22 +44,22 @@
     },
 
     // Section A: Census Balancing Formula [A] + [B] - [C] - [D] - [E] = [F]
-    censusA: {{ $report->form_data['section_a_census']['previous_admissions_a'] ?? 0 }},
-    admittedFromEr: {{ $report->form_data['section_a_census']['newly_admitted_from_er'] ?? 0 }},
-    admittedFromOpd: {{ $report->form_data['section_a_census']['newly_admitted_from_opd'] ?? 0 }},
-    dischargedRecovered: {{ $report->form_data['section_a_census']['discharged_recovered_c1'] ?? 0 }},
-    dischargedDama: {{ $report->form_data['section_a_census']['discharged_dama_c2'] ?? 0 }},
-    referredOutD: {{ $report->form_data['section_a_census']['referred_out_d'] ?? 0 }},
-    deathsE: {{ $report->form_data['section_a_census']['deaths_today_e'] ?? 0 }},
-    currentCensusF: {{ $report->form_data['section_a_census']['current_admissions_f'] ?? 0 }},
-    patientBedDays: {{ $report->form_data['section_a_census']['total_patient_bed_days'] ?? 0 }},
+    censusA: {{ (int)($formData['section_a_census']['previous_admissions_a'] ?? 0) }},
+    admittedFromEr: {{ (int)($formData['section_a_census']['newly_admitted_from_er'] ?? 0) }},
+    admittedFromOpd: {{ (int)($formData['section_a_census']['newly_admitted_from_opd'] ?? 0) }},
+    dischargedRecovered: {{ (int)($formData['section_a_census']['discharged_recovered_c1'] ?? 0) }},
+    dischargedDama: {{ (int)($formData['section_a_census']['discharged_dama_c2'] ?? 0) }},
+    referredOutD: {{ (int)($formData['section_a_census']['referred_out_d'] ?? 0) }},
+    deathsE: {{ (int)($formData['section_a_census']['deaths_today_e'] ?? 0) }},
+    currentCensusF: {{ (int)($formData['section_a_census']['current_admissions_f'] ?? 0) }},
+    patientBedDays: {{ (int)($formData['section_a_census']['total_patient_bed_days'] ?? 0) }},
 
     // Section C: Maternity
-    nvdDeliveries: {{ $report->form_data['section_c_maternity']['nvd_normal_delivery'] ?? 0 }},
-    cSectionDeliveries: {{ $report->form_data['section_c_maternity']['c_section_delivery'] ?? 0 }},
-    newbornMale: {{ $report->form_data['section_c_maternity']['newborn_male'] ?? 0 }},
-    newbornFemale: {{ $report->form_data['section_c_maternity']['newborn_female'] ?? 0 }},
-    nicuAdmissions: {{ $report->form_data['section_c_maternity']['nicu_admissions'] ?? 0 }},
+    nvdDeliveries: {{ (int)($formData['section_c_maternity']['nvd_normal_delivery'] ?? 0) }},
+    cSectionDeliveries: {{ (int)($formData['section_c_maternity']['c_section_delivery'] ?? 0) }},
+    newbornMale: {{ (int)($formData['section_c_maternity']['newborn_male'] ?? 0) }},
+    newbornFemale: {{ (int)($formData['section_c_maternity']['newborn_female'] ?? 0) }},
+    nicuAdmissions: {{ (int)($formData['section_c_maternity']['nicu_admissions'] ?? 0) }},
 
     // Computed Properties
     get newlyAdmittedB() {
@@ -275,7 +281,7 @@
                     <span class="text-[var(--hc-text-muted)] text-[11px] font-semibold hidden lg:inline">Charge Nurse:</span>
                     <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs font-bold text-slate-800 dark:text-slate-100">
                         <i data-lucide="user-check" class="w-3.5 h-3.5 text-emerald-500"></i>
-                        <span>{{ $report->lead_staff_name ?? auth()->user()->name }}</span>
+                        <span>{{ $displayLeadStaff }}</span>
                         <span class="text-[10px] text-slate-400 font-mono font-normal">(Automated)</span>
                     </div>
                 </div>
@@ -390,7 +396,7 @@
                         <span class="font-bold text-[var(--hc-text)]">CHARGE NURSE / LEAD:</span>
                         <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 font-bold text-xs text-slate-900 dark:text-white border border-slate-300 dark:border-slate-700">
                             <i data-lucide="user-check" class="w-3 h-3 text-emerald-500"></i>
-                            {{ $report->lead_staff_name ?? auth()->user()->name }}
+                            {{ $displayLeadStaff }}
                         </span>
                     </div>
                 </div>

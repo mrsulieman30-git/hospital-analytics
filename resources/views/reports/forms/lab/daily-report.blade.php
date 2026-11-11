@@ -485,9 +485,9 @@
                     {{-- Specialty Filter --}}
                     <select x-model="testFilterType" class="hc-input hc-select text-xs py-1.5 px-2.5 w-auto">
                         <option value="all">All Specialties (13)</option>
-                        <template x-for="(meta, code) in labTypesMeta" :key="code">
-                            <option :value="code" x-text="meta.label || meta.short || code"></option>
-                        </template>
+                        @foreach($labTypesMeta as $code => $meta)
+                            <option value="{{ $code }}">{{ $meta['label'] ?? ($meta['short'] ?? ucfirst($code)) }}</option>
+                        @endforeach
                     </select>
 
                     {{-- Toggle Show All Catalog vs Smart View --}}

@@ -235,7 +235,7 @@
             <div><strong>Shift / Cadence:</strong> {{ $report->shift }}</div>
             <div><strong>Duty Staff Lead:</strong> {{ $report->lead_staff_name }}</div>
             <div><strong>Submission Time:</strong> {{ $report->submitted_at ? $report->submitted_at->format('Y-m-d H:i') : 'Draft' }}</div>
-            <div><strong>Audited By:</strong> {{ $report->auditor->name ?? 'Pending Analytics Audit' }}</div>
+            <div><strong>Audited By:</strong> {{ $report->auditor_name }}</div>
             <div><strong>Verified:</strong> {{ $report->audited_at ? $report->audited_at->format('Y-m-d H:i') : 'In Queue' }}</div>
         </div>
 
