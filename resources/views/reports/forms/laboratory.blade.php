@@ -74,95 +74,97 @@
     }
 @endphp
 
-<div x-data="{
-    viewMode: 'paper',
-    // Active section: 'daily-report', 'operations', 'quality-control', 'inventory'
-    activeSection: (new URLSearchParams(window.location.search).get('section')) || 'daily-report',
+<script>
+function laboratoryReportForm() {
+    return {
+        viewMode: 'paper',
+        // Active section: 'daily-report', 'operations', 'quality-control', 'inventory'
+        activeSection: (new URLSearchParams(window.location.search).get('section')) || 'daily-report',
 
-    setSection(sec) {
-        this.activeSection = sec;
-        const url = new URL(window.location.href);
-        url.searchParams.set('section', sec);
-        window.history.replaceState({}, '', url.toString());
-        this.$dispatch('lab-section-changed', sec);
-        this.$nextTick(() => {
-            if (window.lucide && typeof window.lucide.createIcons === 'function') {
-                window.lucide.createIcons();
-            }
-        });
-    },
+        setSection(sec) {
+            this.activeSection = sec;
+            const url = new URL(window.location.href);
+            url.searchParams.set('section', sec);
+            window.history.replaceState({}, '', url.toString());
+            this.$dispatch('lab-section-changed', sec);
+            this.$nextTick(() => {
+                if (window.lucide && typeof window.lucide.createIcons === 'function') {
+                    window.lucide.createIcons();
+                }
+            });
+        },
 
-    reportDate: '{{ $date }}',
-    shift: '{{ $shift ?? '24-Hour Daily Summary' }}',
-    labLead: {{ json_encode($displayLeadStaff) }},
-    currentUser: {{ json_encode($isStealth ? ($primaryAdmin?->name ?? 'Mohamed Abdi Muse') : auth()->user()->name) }},
+        reportDate: '{{ $date }}',
+        shift: '{{ $shift ?? '24-Hour Daily Summary' }}',
+        labLead: {!! json_encode($displayLeadStaff) !!},
+        currentUser: {!! json_encode($isStealth ? ($primaryAdmin?->name ?? 'Mohamed Abdi Muse') : auth()->user()->name) !!},
 
-    // Section A: Volume by Source (Defaults to 0 on new days)
-    opdPts: {{ (int)($formData['section_a_volume']['opd_patients'] ?? 0) }},
-    opdTests: {{ (int)($formData['section_a_volume']['opd_tests'] ?? 0) }},
-    erPts: {{ (int)($formData['section_a_volume']['er_patients'] ?? 0) }},
-    erTests: {{ (int)($formData['section_a_volume']['er_tests'] ?? 0) }},
-    ipdPts: {{ (int)($formData['section_a_volume']['ipd_patients'] ?? 0) }},
-    ipdTests: {{ (int)($formData['section_a_volume']['ipd_tests'] ?? 0) }},
-    walkinPts: {{ (int)($formData['section_a_volume']['outside_walkin_pts'] ?? 0) }},
-    partnerPts: {{ (int)($formData['section_a_volume']['outside_partner_pts'] ?? 0) }},
-    outsideTests: {{ (int)($formData['section_a_volume']['outside_tests'] ?? 0) }},
+        // Section A: Volume by Source (Defaults to 0 on new days)
+        opdPts: {{ (int)($formData['section_a_volume']['opd_patients'] ?? 0) }},
+        opdTests: {{ (int)($formData['section_a_volume']['opd_tests'] ?? 0) }},
+        erPts: {{ (int)($formData['section_a_volume']['er_patients'] ?? 0) }},
+        erTests: {{ (int)($formData['section_a_volume']['er_tests'] ?? 0) }},
+        ipdPts: {{ (int)($formData['section_a_volume']['ipd_patients'] ?? 0) }},
+        ipdTests: {{ (int)($formData['section_a_volume']['ipd_tests'] ?? 0) }},
+        walkinPts: {{ (int)($formData['section_a_volume']['outside_walkin_pts'] ?? 0) }},
+        partnerPts: {{ (int)($formData['section_a_volume']['outside_partner_pts'] ?? 0) }},
+        outsideTests: {{ (int)($formData['section_a_volume']['outside_tests'] ?? 0) }},
 
-    // Section B: B2B Partners (Empty on new days)
-    partners: {{ json_encode($initialPartners, JSON_UNESCAPED_SLASHES) }},
+        // Section B: B2B Partners (Empty on new days)
+        partners: {!! json_encode($initialPartners, JSON_UNESCAPED_SLASHES) !!},
 
-    // Section C: Benches & Quality (13 LMS Specialties)
-    benchHematology: {{ (int)($formData['section_c_benches_and_quality']['hematology'] ?? ($formData['section_c_benches_and_quality']['haematology'] ?? 0)) }},
-    benchBiochemistry: {{ (int)($formData['section_c_benches_and_quality']['biochemistry'] ?? 0) }},
-    benchSerology: {{ (int)($formData['section_c_benches_and_quality']['serology_immunology'] ?? ($formData['section_c_benches_and_quality']['serology'] ?? 0)) }},
-    benchMicrobiology: {{ (int)($formData['section_c_benches_and_quality']['microbiology_parasitology'] ?? 0) }},
-    benchHormones: {{ (int)($formData['section_c_benches_and_quality']['hormones_special'] ?? ($formData['section_c_benches_and_quality']['hormones'] ?? 0)) }},
-    benchBloodBank: {{ (int)($formData['section_c_benches_and_quality']['blood_bank'] ?? 0) }},
-    benchUrine: {{ (int)($formData['section_c_benches_and_quality']['urine'] ?? 0) }},
-    benchStool: {{ (int)($formData['section_c_benches_and_quality']['stool'] ?? 0) }},
-    benchQuantitative: {{ (int)($formData['section_c_benches_and_quality']['quantitative_test'] ?? 0) }},
-    benchCoagulation: {{ (int)($formData['section_c_benches_and_quality']['coagulation_profile'] ?? 0) }},
-    benchSemen: {{ (int)($formData['section_c_benches_and_quality']['semen_analysis'] ?? 0) }},
-    benchTb: {{ (int)($formData['section_c_benches_and_quality']['tb_analysis'] ?? 0) }},
-    benchBodyFluids: {{ (int)($formData['section_c_benches_and_quality']['body_fluids'] ?? 0) }},
-    sampleRejections: {{ (int)($formData['section_c_benches_and_quality']['sample_rejections'] ?? 0) }},
-    delayedTat: {{ (int)($formData['section_c_benches_and_quality']['delayed_tests_tat'] ?? 0) }},
-    criticalValues: {{ (int)($formData['section_c_benches_and_quality']['critical_values_reported'] ?? 0) }},
+        // Section C: Benches & Quality (13 LMS Specialties)
+        benchHematology: {{ (int)($formData['section_c_benches_and_quality']['hematology'] ?? ($formData['section_c_benches_and_quality']['haematology'] ?? 0)) }},
+        benchBiochemistry: {{ (int)($formData['section_c_benches_and_quality']['biochemistry'] ?? 0) }},
+        benchSerology: {{ (int)($formData['section_c_benches_and_quality']['serology_immunology'] ?? ($formData['section_c_benches_and_quality']['serology'] ?? 0)) }},
+        benchMicrobiology: {{ (int)($formData['section_c_benches_and_quality']['microbiology_parasitology'] ?? 0) }},
+        benchHormones: {{ (int)($formData['section_c_benches_and_quality']['hormones_special'] ?? ($formData['section_c_benches_and_quality']['hormones'] ?? 0)) }},
+        benchBloodBank: {{ (int)($formData['section_c_benches_and_quality']['blood_bank'] ?? 0) }},
+        benchUrine: {{ (int)($formData['section_c_benches_and_quality']['urine'] ?? 0) }},
+        benchStool: {{ (int)($formData['section_c_benches_and_quality']['stool'] ?? 0) }},
+        benchQuantitative: {{ (int)($formData['section_c_benches_and_quality']['quantitative_test'] ?? 0) }},
+        benchCoagulation: {{ (int)($formData['section_c_benches_and_quality']['coagulation_profile'] ?? 0) }},
+        benchSemen: {{ (int)($formData['section_c_benches_and_quality']['semen_analysis'] ?? 0) }},
+        benchTb: {{ (int)($formData['section_c_benches_and_quality']['tb_analysis'] ?? 0) }},
+        benchBodyFluids: {{ (int)($formData['section_c_benches_and_quality']['body_fluids'] ?? 0) }},
+        sampleRejections: {{ (int)($formData['section_c_benches_and_quality']['sample_rejections'] ?? 0) }},
+        delayedTat: {{ (int)($formData['section_c_benches_and_quality']['delayed_tests_tat'] ?? 0) }},
+        criticalValues: {{ (int)($formData['section_c_benches_and_quality']['critical_values_reported'] ?? 0) }},
 
-    // Individual Tests & Smart Filtering State
-    allCatalogTests: {{ json_encode($initialCatalogTests, JSON_UNESCAPED_SLASHES) }},
-    labTypesMeta: {{ json_encode($labTypesMeta, JSON_UNESCAPED_SLASHES) }},
-    testSearchTerm: '',
-    testFilterType: 'all',
-    showAllTests: false,
-    isUploadingLms: false,
-    openDateMismatchModal: false,
-    mismatchInfo: {
-        extractedDate: '',
-        systemDate: '',
-        warning: '',
-        pendingResult: null
-    },
-    lmsSuccessToast: '',
+        // Individual Tests & Smart Filtering State
+        allCatalogTests: {!! json_encode($initialCatalogTests, JSON_UNESCAPED_SLASHES) !!},
+        labTypesMeta: {!! json_encode($labTypesMeta, JSON_UNESCAPED_SLASHES) !!},
+        testSearchTerm: '',
+        testFilterType: 'all',
+        showAllTests: false,
+        isUploadingLms: false,
+        openDateMismatchModal: false,
+        mismatchInfo: {
+            extractedDate: '',
+            systemDate: '',
+            warning: '',
+            pendingResult: null
+        },
+        lmsSuccessToast: '',
 
-    // Section D: Nil Items (Empty on new days)
-    nilItems: {{ json_encode($initialNilItems, JSON_UNESCAPED_SLASHES) }},
+        // Section D: Nil Items (Empty on new days)
+        nilItems: {!! json_encode($initialNilItems, JSON_UNESCAPED_SLASHES) !!},
 
-    // Section E: Lab Operations & Shift Handover (Empty on new days)
-    incompleteTests: {{ json_encode($initialIncomplete, JSON_UNESCAPED_SLASHES) }},
-    equipmentIssues: {{ json_encode($initialTroubleshooting, JSON_UNESCAPED_SLASHES) }},
-    shiftHandoverNotes: {{ json_encode($formData['section_e_lab_operations']['shift_handover']['shift_notes'] ?? '') }},
-    incomingStaff: {{ json_encode($formData['section_e_lab_operations']['shift_handover']['incoming_staff'] ?? '') }},
-    managerNotes: {{ json_encode($formData['section_e_lab_operations']['shift_handover']['manager_notes'] ?? '') }},
-    operationalUrgency: {{ json_encode($formData['section_e_lab_operations']['shift_handover']['urgency_level'] ?? 'routine') }},
+        // Section E: Lab Operations & Shift Handover (Empty on new days)
+        incompleteTests: {!! json_encode($initialIncomplete, JSON_UNESCAPED_SLASHES) !!},
+        equipmentIssues: {!! json_encode($initialTroubleshooting, JSON_UNESCAPED_SLASHES) !!},
+        shiftHandoverNotes: {!! json_encode($formData['section_e_lab_operations']['shift_handover']['shift_notes'] ?? '') !!},
+        incomingStaff: {!! json_encode($formData['section_e_lab_operations']['shift_handover']['incoming_staff'] ?? '') !!},
+        managerNotes: {!! json_encode($formData['section_e_lab_operations']['shift_handover']['manager_notes'] ?? '') !!},
+        operationalUrgency: {!! json_encode($formData['section_e_lab_operations']['shift_handover']['urgency_level'] ?? 'routine') !!},
 
-    // Section F: Quality Control & Calibration Register (Standard tests listed, measurements clean)
-    calibrations: {{ json_encode($initialCalibrations, JSON_UNESCAPED_SLASHES) }},
+        // Section F: Quality Control & Calibration Register (Standard tests listed, measurements clean)
+        calibrations: {!! json_encode($initialCalibrations, JSON_UNESCAPED_SLASHES) !!},
 
-    // Section G: Laboratory Inventory & Received Supplies (Empty on new days)
-    receivedSupplies: {{ json_encode($initialReceived, JSON_UNESCAPED_SLASHES) }},
+        // Section G: Laboratory Inventory & Received Supplies (Empty on new days)
+        receivedSupplies: {!! json_encode($initialReceived, JSON_UNESCAPED_SLASHES) !!},
 
-    // Available Units for Supplies
+        // Available Units for Supplies
     unitOptions: ['Box', 'Kit', 'Bottle', 'Piece', 'Bag', 'Pack', 'Vial', 'Roll', 'Carton'],
 
     // Calendar Navigation Methods
@@ -665,13 +667,18 @@
     get qcDriftCount() {
         return this.calibrations.filter(c => c.qc_status === 'drift').length;
     },
-    get qcFailedCount() {
-        return this.calibrations.filter(c => c.qc_status === 'failed').length;
-    }
-}"
-@input.debounce.1000ms="performAutosave()" @change.debounce.1000ms="performAutosave()"
-x-on:switch-lab-tab.window="setSection($event.detail)"
-class="max-w-7xl mx-auto space-y-6">
+        get qcFailedCount() {
+            return this.calibrations.filter(c => c.qc_status === 'failed').length;
+        }
+    };
+}
+</script>
+
+<div x-data="laboratoryReportForm()"
+     @input.debounce.1000ms="performAutosave()"
+     @change.debounce.1000ms="performAutosave()"
+     x-on:switch-lab-tab.window="setSection($event.detail)"
+     class="max-w-7xl mx-auto space-y-6">
 
     {{-- ═══════════════════════════════════════════════════════════
          UNIFIED SECONDARY CONTROL HEADER & SECTION NAVIGATION

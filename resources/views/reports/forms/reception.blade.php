@@ -13,11 +13,14 @@
         'Dr. Hatem', 'Dr. Keysar', 'Dr. Kaafi', 'Dr. Muslim', 'Dr. Safiyo', 'Dr. Huruse', 'Dr. Jama', 'Dr. Asha', 'Other Dr.'
     ]);
 @endphp
-<div x-data="{
-    viewMode: 'paper',
-    reportDate: '{{ $date }}',
-    shift: '{{ $shift }}',
-    recLead: {{ json_encode($displayLeadStaff) }},
+
+<script>
+function receptionReportForm() {
+    return {
+        viewMode: 'paper',
+        reportDate: '{{ $date }}',
+        shift: '{{ $shift }}',
+        recLead: {!! json_encode($displayLeadStaff) !!},
 
     // Calendar Navigation Methods
     navigateToDate(targetDate) {
@@ -153,10 +156,14 @@
     get totalFootfall() {
         return parseInt(this.newOpd || 0) + parseInt(this.followUp || 0) + parseInt(this.routedToEr || 0) + parseInt(this.directWalkins || 0);
     },
-    get totalCompletedConsultations() {
-        return this.doctors.reduce((sum, doc) => sum + parseInt(doc.completed || 0), 0);
-    }
-}" @input.debounce.1000ms="performAutosave()" @change.debounce.1000ms="performAutosave()" class="max-w-7xl mx-auto space-y-6">
+        get totalCompletedConsultations() {
+            return this.doctors.reduce((sum, doc) => sum + parseInt(doc.completed || 0), 0);
+        }
+    };
+}
+</script>
+
+<div x-data="receptionReportForm()" @input.debounce.1000ms="performAutosave()" @change.debounce.1000ms="performAutosave()" class="max-w-7xl mx-auto space-y-6">
 
     {{-- ═══════════════════════════════════════════════════════════
          UNIFIED SECONDARY CONTROL HEADER & OPERATIONAL TOOLBAR

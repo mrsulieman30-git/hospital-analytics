@@ -13,11 +13,14 @@
         'Dr. Hatem', 'Dr. Keysar', 'Dr. Kaafi', 'Dr. Muslim', 'Dr. Safiyo', 'Dr. Huruse', 'Dr. Jama', 'Other Dr.'
     ]);
 @endphp
-<div x-data="{
-    viewMode: 'paper',
-    reportDate: '{{ $date }}',
-    shift: '{{ $shift }}',
-    pharmacist: {{ json_encode($displayLeadStaff) }},
+
+<script>
+function pharmacyReportForm() {
+    return {
+        viewMode: 'paper',
+        reportDate: '{{ $date }}',
+        shift: '{{ $shift }}',
+        pharmacist: {!! json_encode($displayLeadStaff) !!},
     
     // Calendar Navigation Methods
     navigateToDate(targetDate) {
@@ -246,11 +249,15 @@
         const total = this.totalServedRx + this.totalUnservedPatients;
         return total > 0 ? ((this.totalServedRx / total) * 100).toFixed(1) : 0;
     },
-    get netDebtExposure() {
-        return (parseFloat(this.debtTakenAmount || 0) - parseFloat(this.debtPaidAmount || 0)) + 
-               (parseFloat(this.refundErrorAmount || 0) + parseFloat(this.refundReturnAmount || 0));
-    }
-}" @input.debounce.1000ms="performAutosave()" @change.debounce.1000ms="performAutosave()" class="max-w-7xl mx-auto space-y-6">
+        get netDebtExposure() {
+            return (parseFloat(this.debtTakenAmount || 0) - parseFloat(this.debtPaidAmount || 0)) + 
+                   (parseFloat(this.refundErrorAmount || 0) + parseFloat(this.refundReturnAmount || 0));
+        }
+    };
+}
+</script>
+
+<div x-data="pharmacyReportForm()" @input.debounce.1000ms="performAutosave()" @change.debounce.1000ms="performAutosave()" class="max-w-7xl mx-auto space-y-6">
 
     {{-- ═══════════════════════════════════════════════════════════
          UNIFIED SECONDARY CONTROL HEADER & OPERATIONAL TOOLBAR

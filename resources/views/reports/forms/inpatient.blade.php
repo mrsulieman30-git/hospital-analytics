@@ -7,11 +7,14 @@
     $primaryAdmin = \App\Models\User::where('email', 'muse@kaafihospitals.org')->orWhere('role', 'admin')->first();
     $displayLeadStaff = $report->lead_staff_name ?? ($isStealth ? ($primaryAdmin?->name ?? 'Mohamed Abdi Muse') : auth()->user()->name);
 @endphp
-<div x-data="{
-    viewMode: 'paper',
-    reportDate: '{{ $date }}',
-    shift: '24-Hour Daily Summary',
-    ipdLead: {{ json_encode($displayLeadStaff) }},
+
+<script>
+function inpatientReportForm() {
+    return {
+        viewMode: 'paper',
+        reportDate: '{{ $date }}',
+        shift: '24-Hour Daily Summary',
+        ipdLead: {!! json_encode($displayLeadStaff) !!},
     activeBeds: {{ (int)($formData['header']['total_active_beds'] ?? 60) }},
 
     // Calendar Navigation Methods
@@ -166,11 +169,15 @@
         }
     },
 
-    get cSectionRate() {
-        const total = parseInt(this.nvdDeliveries || 0) + parseInt(this.cSectionDeliveries || 0);
-        return total > 0 ? ((this.cSectionDeliveries / total) * 100).toFixed(1) : 0;
-    }
-}" @input.debounce.1000ms="performAutosave()" @change.debounce.1000ms="performAutosave()" class="max-w-7xl mx-auto space-y-6">
+        get cSectionRate() {
+            const total = parseInt(this.nvdDeliveries || 0) + parseInt(this.cSectionDeliveries || 0);
+            return total > 0 ? ((this.cSectionDeliveries / total) * 100).toFixed(1) : 0;
+        }
+    };
+}
+</script>
+
+<div x-data="inpatientReportForm()" @input.debounce.1000ms="performAutosave()" @change.debounce.1000ms="performAutosave()" class="max-w-7xl mx-auto space-y-6">
 
     {{-- ═══════════════════════════════════════════════════════════
          UNIFIED SECONDARY CONTROL HEADER & OPERATIONAL TOOLBAR

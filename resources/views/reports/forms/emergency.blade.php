@@ -7,11 +7,14 @@
     $primaryAdmin = \App\Models\User::where('email', 'muse@kaafihospitals.org')->orWhere('role', 'admin')->first();
     $displayLeadStaff = $report->lead_staff_name ?? ($isStealth ? ($primaryAdmin?->name ?? 'Mohamed Abdi Muse') : auth()->user()->name);
 @endphp
-<div x-data="{
-    viewMode: 'paper',
-    reportDate: '{{ $date }}',
-    shift: '{{ $shift }}',
-    erLead: {{ json_encode($displayLeadStaff) }},
+
+<script>
+function emergencyReportForm() {
+    return {
+        viewMode: 'paper',
+        reportDate: '{{ $date }}',
+        shift: '{{ $shift }}',
+        erLead: {!! json_encode($displayLeadStaff) !!},
 
     // Calendar Navigation Methods
     navigateToDate(targetDate) {
@@ -175,10 +178,14 @@
     get conversionRate() {
         return this.totalErCases > 0 ? ((this.admittedToIpd / this.totalErCases) * 100).toFixed(1) : 0;
     },
-    get inErMortalityRate() {
-        return this.totalErCases > 0 ? ((this.diedInErCount / this.totalErCases) * 100).toFixed(2) : 0;
-    }
-}" @input.debounce.1000ms="performAutosave()" @change.debounce.1000ms="performAutosave()" class="max-w-7xl mx-auto space-y-6">
+        get inErMortalityRate() {
+            return this.totalErCases > 0 ? ((this.diedInErCount / this.totalErCases) * 100).toFixed(2) : 0;
+        }
+    };
+}
+</script>
+
+<div x-data="emergencyReportForm()" @input.debounce.1000ms="performAutosave()" @change.debounce.1000ms="performAutosave()" class="max-w-7xl mx-auto space-y-6">
 
     {{-- ═══════════════════════════════════════════════════════════
          ORGANIZED TOP ACTION BAR & OPERATIONAL CONTROLS
