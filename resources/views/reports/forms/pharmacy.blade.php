@@ -65,14 +65,14 @@ function pharmacyReportForm() {
     // Section A: Prescriptions
     insideRx: {{ (int)($formData['section_a']['inside_rx_count'] ?? 0) }},
     insideItems: {{ (int)($formData['section_a']['inside_items_dispensed'] ?? 0) }},
-    insideNotes: {{ json_encode($formData['section_a']['inside_notes'] ?? '') }},
+    insideNotes: {!! json_encode($formData['section_a']['inside_notes'] ?? '') !!},
     outsideRx: {{ (int)($formData['section_a']['outside_rx_count'] ?? 0) }},
     outsideItems: {{ (int)($formData['section_a']['outside_items_dispensed'] ?? 0) }},
-    outsideSources: {{ json_encode($formData['section_a']['outside_sources'] ?? ['Walk-In Local']) }},
+    outsideSources: {!! json_encode($formData['section_a']['outside_sources'] ?? ['Walk-In Local'], JSON_UNESCAPED_SLASHES) !!},
     dispensedValue: {{ (float)($formData['section_a']['total_dispensed_value'] ?? 0) }},
 
     // Section B: Doctors Breakdown
-    doctors: {{ json_encode($formData['section_b_doctors'] ?? $defaultPhmDoctors) }},
+    doctors: {!! json_encode($formData['section_b_doctors'] ?? $defaultPhmDoctors, JSON_UNESCAPED_SLASHES) !!},
 
     // Section C: Unserved Root Causes (Sababta)
     price: {{ (int)($formData['section_c_root_causes']['price'] ?? 0) }},
@@ -81,7 +81,7 @@ function pharmacyReportForm() {
     didNotPresent: {{ (int)($formData['section_c_root_causes']['did_not_present'] ?? 0) }},
     unknown: {{ (int)($formData['section_c_root_causes']['unknown'] ?? 0) }},
     otherReason: {{ (int)($formData['section_c_root_causes']['other'] ?? 0) }},
-    otherDetails: {{ json_encode($formData['section_c_root_causes']['other_details'] ?? '') }},
+    otherDetails: {!! json_encode($formData['section_c_root_causes']['other_details'] ?? '') !!},
 
     // Section D: Financials
     refundErrorCases: {{ (int)($formData['section_d_financials']['refund_billing_error_cases'] ?? 0) }},
@@ -94,9 +94,9 @@ function pharmacyReportForm() {
     debtPaidAmount: {{ (float)($formData['section_d_financials']['debt_paid_amount'] ?? 0) }},
 
     // Section E: Inventory Alerts
-    outOfStockDrugs: {{ json_encode($formData['section_e_inventory']['out_of_stock_drugs'] ?? []) }},
-    nearExpiryDrugs: {{ json_encode($formData['section_e_inventory']['near_expiry_drugs'] ?? []) }},
-    urgentNeeds: {{ json_encode($formData['section_e_inventory']['urgent_needs'] ?? []) }},
+    outOfStockDrugs: {!! json_encode($formData['section_e_inventory']['out_of_stock_drugs'] ?? [], JSON_UNESCAPED_SLASHES) !!},
+    nearExpiryDrugs: {!! json_encode($formData['section_e_inventory']['near_expiry_drugs'] ?? [], JSON_UNESCAPED_SLASHES) !!},
+    urgentNeeds: {!! json_encode($formData['section_e_inventory']['urgent_needs'] ?? [], JSON_UNESCAPED_SLASHES) !!},
 
     // Dynamic Inventory Helpers & Selectable Dropdowns
     stockoutQuickSelect: '',

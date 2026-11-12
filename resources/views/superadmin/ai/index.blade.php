@@ -1,83 +1,89 @@
 @extends('layouts.app')
 
 @section('content')
-<div x-data="{
-    periodType: '{{ $selectedPeriod }}',
-    date: '{{ $selectedDate }}',
-    loading: false,
-    publishing: false,
-    publishedSuccess: false,
-    
-    // AI Generated Report State
-    report: {{ json_encode($existingInsight ? [
-        'title' => $existingInsight->title,
-        'executive_summary' => $existingInsight->executive_summary,
-        'key_findings' => $existingInsight->key_findings,
-        'bottlenecks_and_root_causes' => $existingInsight->bottlenecks_and_root_causes,
-        'action_plan' => $existingInsight->action_plan,
-        'medical_benchmarks' => $existingInsight->medical_benchmarks,
-    ] : null) }},
+<script>
+function aiConsoleComponent() {
+    return {
+        periodType: '{{ $selectedPeriod }}',
+        date: '{{ $selectedDate }}',
+        loading: false,
+        publishing: false,
+        publishedSuccess: false,
+        
+        // AI Generated Report State
+        report: {!! json_encode($existingInsight ? [
+            'title' => $existingInsight->title,
+            'executive_summary' => $existingInsight->executive_summary,
+            'key_findings' => $existingInsight->key_findings,
+            'bottlenecks_and_root_causes' => $existingInsight->bottlenecks_and_root_causes,
+            'action_plan' => $existingInsight->action_plan,
+            'medical_benchmarks' => $existingInsight->medical_benchmarks,
+        ] : null, JSON_UNESCAPED_SLASHES) !!},
 
-    runAnalysis() {
-        this.loading = true;
-        this.publishedSuccess = false;
-        fetch('{{ route('superadmin.deepseek.analyze') }}', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': '{{ csrf_token() }}'
-            },
-            body: JSON.stringify({
-                period_type: this.periodType,
-                date: this.date
+        runAnalysis() {
+            this.loading = true;
+            this.publishedSuccess = false;
+            fetch('{{ route('superadmin.deepseek.analyze') }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({
+                    period_type: this.periodType,
+                    date: this.date
+                })
             })
-        })
-        .then(res => res.json())
-        .then(res => {
-            if (res.status === 'success') {
-                this.report = res.data;
-            }
-            this.loading = false;
-        })
-        .catch(err => {
-            console.error(err);
-            this.loading = false;
-        });
-    },
+            .then(res => res.json())
+            .then(res => {
+                if (res.status === 'success') {
+                    this.report = res.data;
+                }
+                this.loading = false;
+            })
+            .catch(err => {
+                console.error(err);
+                this.loading = false;
+            });
+        },
 
-    publishToBoardroom() {
-        if (!this.report) return;
-        this.publishing = true;
-        fetch('{{ route('superadmin.deepseek.publish') }}', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': '{{ csrf_token() }}'
-            },
-            body: JSON.stringify({
-                report_type: this.periodType,
-                period_date: this.date,
-                title: this.report.title,
-                executive_summary: this.report.executive_summary,
-                key_findings: this.report.key_findings,
-                bottlenecks_and_root_causes: this.report.bottlenecks_and_root_causes,
-                action_plan: this.report.action_plan,
-                medical_benchmarks: this.report.medical_benchmarks
+        publishToBoardroom() {
+            if (!this.report) return;
+            this.publishing = true;
+            fetch('{{ route('superadmin.deepseek.publish') }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({
+                    report_type: this.periodType,
+                    period_date: this.date,
+                    title: this.report.title,
+                    executive_summary: this.report.executive_summary,
+                    key_findings: this.report.key_findings,
+                    bottlenecks_and_root_causes: this.report.bottlenecks_and_root_causes,
+                    action_plan: this.report.action_plan,
+                    medical_benchmarks: this.report.medical_benchmarks
+                })
             })
-        })
-        .then(res => res.json())
-        .then(res => {
-            this.publishing = false;
-            if (res.status === 'success') {
-                this.publishedSuccess = true;
-            }
-        })
-        .catch(err => {
-            console.error(err);
-            this.publishing = false;
-        });
-    }
-}" class="max-w-6xl mx-auto space-y-6">
+            .then(res => res.json())
+            .then(res => {
+                this.publishing = false;
+                if (res.status === 'success') {
+                    this.publishedSuccess = true;
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                this.publishing = false;
+            });
+        }
+    };
+}
+</script>
+
+<div x-data="aiConsoleComponent()" class="max-w-6xl mx-auto space-y-6">
 
     <!-- Stealth Super Admin Header -->
     <div class="bg-gradient-to-r from-purple-900 via-slate-900 to-indigo-950 p-6 rounded-3xl border border-purple-800/40 shadow-2xl text-white flex flex-col md:flex-row md:items-center md:justify-between gap-4">

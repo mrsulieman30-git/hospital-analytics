@@ -21,6 +21,7 @@ function receptionReportForm() {
         reportDate: '{{ $date }}',
         shift: '{{ $shift }}',
         recLead: {!! json_encode($displayLeadStaff) !!},
+        receptionist: {!! json_encode($displayLeadStaff) !!},
 
     // Calendar Navigation Methods
     navigateToDate(targetDate) {
@@ -69,7 +70,7 @@ function receptionReportForm() {
     directWalkins: {{ (int)($formData['section_a']['direct_lab_pharmacy_walkins'] ?? 0) }},
 
     // Section B: Doctors OPD Consultations Grid
-    doctors: {{ json_encode($formData['section_b_doctors'] ?? $defaultRecDoctors) }},
+    doctors: {!! json_encode($formData['section_b_doctors'] ?? $defaultRecDoctors, JSON_UNESCAPED_SLASHES) !!},
 
     // Section C
     leftDueDelay: {{ (int)($formData['section_c']['patients_left_due_delay'] ?? 0) }},
